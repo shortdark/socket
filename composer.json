@@ -1,0 +1,12 @@
+{
+  "name": "shortdark/socket",
+  "license": "GNU",
+  "require": {
+    "php": ">=7.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "Shortdark\\": "src/"
+    }
+  }
+}
