@@ -1,6 +1,6 @@
 {
   "name": "shortdark/socket",
-  "license": "GNU",
+  "license": "LGPL-3.0-or-later",
   "require": {
     "php": ">=7.0"
   },
