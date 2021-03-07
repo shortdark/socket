@@ -15,7 +15,8 @@
  */
 
 /**
- * TODO: Allow work days/all days to be dealt with
+ * TODO: Make sure 0 is on the Y-axis if the lines are positive and negative.
+ * TODO: Allow work days/all days to be dealt with.
  * TODO: If there is a bank holiday on a Friday and it is not the end of the month we need to add the week line.
  * TODO: The first working day of the month should be on the 1st, 2nd or 3rd unless it is on a Friday and a bank holiday.
  * TODO: Refactoring.
