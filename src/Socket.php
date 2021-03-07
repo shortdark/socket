@@ -159,7 +159,7 @@ class Socket {
         while (isset($this->results[$i]['col1'])) {
             for ($j=1; $j <= 4; $j++) {
                 $colName = 'col' . $j;
-                if ($this->results[$i][$colName] < $min) {
+                if ( isset($this->results[$i][$colName]) && $this->results[$i][$colName] < $min) {
                     $min = $this->results[$i][$colName];
                 }
             }
