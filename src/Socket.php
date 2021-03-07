@@ -1,9 +1,9 @@
 <?php
 
 /**
- * GraphClass - takes data as an array and plots it as a SVG graph.
+ * Socket - takes data as an array and plots it as a SVG graph.
  * PHP Version >= 7.0
- * Version 0.0.1
+ * Version 0.0.2
  * @package Socket
  * @link https://github.com/shortdark/socket/
  * @author Neil Ludlow (shortdark) <neil@shortdark.net>
@@ -13,25 +13,35 @@
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE.
  */
+
+/**
+ * TODO: Allow work days/all days to be dealt with
+ * TODO: If there is a bank holiday on a Friday and it is not the end of the month we need to add the week line.
+ * TODO: The first working day of the month should be on the 1st, 2nd or 3rd unless it is on a Friday and a bank holiday.
+ * TODO: Refactoring.
+ */
 namespace Shortdark;
 class Socket {
 
     /**
      * ################
      * ##
-     * ##  CONFIG
+     * ##  CONFIG, CAN BE OVERWRITTEN
      * ##
      * ################
      */
 
-    private $width_of_svg = 1400;
+    // Width of SVG bounds
+    public $width_of_svg = 1400;
 
-    private $height_of_svg = 540;
+    // Height of SVG bounds
+    public $height_of_svg = 540;
 
-    private $separator = 15;
+    // The distance in pixels between data points on the X-axis
+    public $separator = 15;
 
-    private $iterations = 10;
-
+    // The number of iterations on the Y-axis
+    public $iterations = 10;
 
     /**
      * ################
@@ -59,9 +69,7 @@ class Socket {
 
     private $end_axis;
 
-    private $symbol;
-
-    private $unit;
+    private $graphName;
 
     /**
      * ################
@@ -91,24 +99,47 @@ class Socket {
     /**
      * ################
      * ##
-     * ##  NEW METHODS
+     * ##  METHODS
      * ##
      * ################
      */
 
-    private function getHighest ()
+    public function draw_svg($dataArray, $legends): string
     {
-        $max=0;
+        $this->results = $dataArray;
+        $this->end_axis = $this->getHighest() ?? 100;
+        $this->start_axis = $this->getLowest() ?? 0;
+        $this->graphName = $legends[0];
+
+        $this->assign_colors();
+        $this->assign_number_of_days();
+
+        $graph = $this->set_up_svg_graph();
+        $graph .= $this->set_up_svg_axis();
+        $graph .= $this->draw_main_graphlines('col1');
+        $graph .= $this->draw_main_graphlines('col2');
+        $graph .= $this->draw_main_graphlines('col3');
+        $graph .= $this->draw_main_graphlines('col4');
+        $graph .= $this->add_weeks_months_years();
+        $graph .= $this->add_key($legends);
+        $logox = $this->end_of_graph_x - 110;
+        $logoy = $this->end_of_graph_y - 15;
+        $graph .= "<a xlink:href=\"https://shortdark.co.uk/\" xlink:title=\"shortdark.co.uk\"><text x=\"$logox\" y=\"$logoy\" font-family=\"sans-serif\" font-size=\"16px\" fill=\"black\">shortdark.co.uk</text></a>";
+        $graph .= "</svg>";
+
+        return $graph;
+    }
+
+    private function getHighest (): int
+    {
         $i=0;
+        $max = $this->results[$i]['col1'];
         while ($this->results[$i]['col1']) {
-            if ($this->results[$i]['col1'] > $max) {
-                $max = $this->results[$i]['col1'];
-            }
-            if ($this->results[$i]['col2'] > $max) {
-                $max = $this->results[$i]['col2'];
-            }
-            if ($this->results[$i]['col3'] > $max) {
-                $max = $this->results[$i]['col3'];
+            for ($j=1; $j <= 4; $j++) {
+                $colName = 'col' . $j;
+                if ($this->results[$i][$colName] > $max) {
+                    $max = $this->results[$i][$colName];
+                }
             }
             $i++;
         }
@@ -121,21 +152,16 @@ class Socket {
         return $max;
     }
 
-    private function getLowest ()
+    private function getLowest (): int
     {
         $i=0;
+        $min = $this->results[$i]['col1'];
         while ($this->results[$i]['col1']) {
-            if (empty($min)) {
-                $min = $this->results[$i]['col1'];
-            }
-            if ($this->results[$i]['col1'] < $min) {
-                $min = $this->results[$i]['col1'];
-            }
-            if ($this->results[$i]['col2'] < $min) {
-                $min = $this->results[$i]['col2'];
-            }
-            if ($this->results[$i]['col3'] < $min) {
-                $min = $this->results[$i]['col3'];
+            for ($j=1; $j <= 4; $j++) {
+                $colName = 'col' . $j;
+                if ($this->results[$i][$colName] < $min) {
+                    $min = $this->results[$i][$colName];
+                }
             }
             $i++;
         }
@@ -148,15 +174,7 @@ class Socket {
         return $min;
     }
 
-    /**
-     * ################
-     * ##
-     * ##  OLD METHODS
-     * ##
-     * ################
-     */
-
-    private function set_up_svg_graph()
+    private function set_up_svg_graph(): string
     {
         $graph = "<svg id=\"graph\" width=\"" . $this->width_of_svg . "px\" height=\"" . $this->height_of_svg . "px\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\">";
         $graph .= "<path stroke=\"black\" stroke-width=\"0.4\" d=\"M10 10 v $this->height_of_graph\"/>";
@@ -165,8 +183,7 @@ class Socket {
         return $graph;
     }
 
-
-    private function set_up_svg_axis()
+    private function set_up_svg_axis(): string
     {
         $graph = '';
         $start_of_axis = $this->start_axis;
@@ -183,18 +200,18 @@ class Socket {
         return $graph;
     }
 
-    private function draw_main_graphlines($curr)
+    private function draw_main_graphlines($columnName): string
     {
         $g = 0;
-        $color = $this->colors[$curr];
-
+        $color = $this->colors[$columnName];
+        $line='';
         $start_of_axis = $this->start_axis;
         $end_of_axis = $this->end_axis;
         $pixels_per_unit = $this->height_of_graph / ($end_of_axis - $start_of_axis);
-        if ($this->results[$g][$curr]) {
-            while (isset($this->results[$g][$curr]) && $g < $this->days_for_graph) {
+        if ($this->results[$g][$columnName]) {
+            while (isset($this->results[$g][$columnName]) && $g < $this->days_for_graph) {
                 $xvalue = $this->end_of_graph_x - ($g * $this->separator);
-                $currencyval = floatval($this->results[$g][$curr]);
+                $currencyval = floatval($this->results[$g][$columnName]);
                 $yvalue = $this->end_of_graph_y - (($currencyval - $start_of_axis) * $pixels_per_unit);
                 if (10 <= $xvalue) {
                     if (0 == $g) {
@@ -210,12 +227,12 @@ class Socket {
         return $line;
     }
 
-    private function add_weeks_months_years()
+    private function add_weeks_months_years(): string
     {
         $d = 0;
+        $graph = '';
         if ($this->results[$d]['date']) {
             $weeklegendx = ($this->width_of_graph / 2) - 20;
-            $graph = '';
             $graph .= "<text x=\"$weeklegendx\" y=\"30\" font-family=\"sans-serif\" font-size=\"12px\" fill=\"black\">Week Numbers</text>";
             while ($this->results[$d]['date']) {
                 $dateval = $this->results[$d]['date'];
@@ -261,14 +278,14 @@ class Socket {
         return $graph;
     }
 
-    private function add_key($legends)
+    private function add_key($legends): string
     {
         $count = count($legends[2]);
         $vertical = 45 + (30 * ($count-1));
-        $symbolname = strtoupper($this->symbol);
+        $upperName = strtoupper($this->graphName);
         $graph = '';
         $graph .= "<path fill-opacity=\"0.9\" d=\"M20 12 v{$vertical} h200 v-{$vertical} h-200\" fill=\"white\"></path>";
-        $graph .= "<text x=\"50\" y=\"40\" font-family=\"sans-serif\" font-size=\"16px\" fill=\"black\" text-decoration=\"underline\">{$symbolname}</text>";
+        $graph .= "<text x=\"50\" y=\"40\" font-family=\"sans-serif\" font-size=\"16px\" fill=\"black\" text-decoration=\"underline\">{$upperName}</text>";
 
         for ($i=1; $i<=$count; $i++) {
             $column = 'col' . $i;
@@ -281,32 +298,6 @@ class Socket {
             }
 
         }
-        return $graph;
-    }
-
-    public function draw_svg($dataArray, $legends)
-    {
-        $this->results = $dataArray;
-        $this->end_axis = $this->getHighest() ?? 100;
-        $this->start_axis = $this->getLowest() ?? 0;
-        $this->symbol = $legends[0];
-        $this->unit = $legends[1];
-
-        $this->assign_colors();
-        $this->assign_number_of_days();
-
-        $graph = $this->set_up_svg_graph();
-        $graph .= $this->set_up_svg_axis();
-        $graph .= $this->draw_main_graphlines('col1');
-        $graph .= $this->draw_main_graphlines('col2');
-        $graph .= $this->draw_main_graphlines('col3');
-        $graph .= $this->add_weeks_months_years();
-        $graph .= $this->add_key($legends);
-        $logox = $this->end_of_graph_x - 110;
-        $logoy = $this->end_of_graph_y - 15;
-        $graph .= "<a xlink:href=\"https://shortdark.co.uk/\" xlink:title=\"shortdark.co.uk\"><text x=\"$logox\" y=\"$logoy\" font-family=\"sans-serif\" font-size=\"16px\" fill=\"black\">shortdark.co.uk</text></a>";
-        $graph .= "</svg>";
-
         return $graph;
     }
 
