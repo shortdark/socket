@@ -134,7 +134,7 @@ class Socket {
     {
         $i=0;
         $max = $this->results[$i]['col1'];
-        while ($this->results[$i]['col1']) {
+        while (isset($this->results[$i]['col1'])) {
             for ($j=1; $j <= 4; $j++) {
                 $colName = 'col' . $j;
                 if ($this->results[$i][$colName] > $max) {
@@ -156,7 +156,7 @@ class Socket {
     {
         $i=0;
         $min = $this->results[$i]['col1'];
-        while ($this->results[$i]['col1']) {
+        while (isset($this->results[$i]['col1'])) {
             for ($j=1; $j <= 4; $j++) {
                 $colName = 'col' . $j;
                 if ($this->results[$i][$colName] < $min) {
