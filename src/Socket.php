@@ -3,7 +3,7 @@
 /**
  * Socket - takes data as an array and plots it as a SVG graph.
  * PHP Version >= 7.0
- * Version 0.0.3
+ * Version 0.0.4
  * @package Socket
  * @link https://github.com/shortdark/socket/
  * @author Neil Ludlow (shortdark) <neil@shortdark.net>
@@ -14,17 +14,6 @@
  * FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-/**
- * TODO: Make sure 0 is on the Y-axis if the lines are positive and negative.
- * TODO: Allow work days/all days to be dealt with.
- * TODO: Branding on/off
- * TODO: Calculate correct dimensions of branding.
- * TODO: Allow data in a mixed order array to be sorted and presented correctly.
- * TODO: Allow any four names to be used for the data points, i.e. not just 'col1', etc.
- * TODO: If there is a bank holiday on a Friday and it is not the end of the month we need to add the week line manually - fix.
- * TODO: The first working day of the month should be on the 1st, 2nd or 3rd unless it is on a Friday and a bank holiday.
- * TODO: Refactoring.
- */
 namespace Shortdark;
 class Socket {
 
@@ -214,9 +203,10 @@ class Socket {
         $start_of_axis = $this->start_axis;
         $end_of_axis = $this->end_axis;
         $data_range = $end_of_axis - $start_of_axis;
-        $value_per_iteration = $data_range / $this->iterations;
-        for ($i = 0; $i <= $this->iterations; $i++) {
-            $heightatt = $this->end_of_graph_y - ($i * $this->height_of_graph / $this->iterations);
+        $iterationsInt = intval($this->iterations);
+        $value_per_iteration = $data_range / $iterationsInt;
+        for ($i = 0; $i <= $iterationsInt; $i++) {
+            $heightatt = $this->end_of_graph_y - ($i * $this->height_of_graph / $iterationsInt);
             $textval = $start_of_axis + ($i * $value_per_iteration);
             $graph .= "<text x=\"1\" y=\"$heightatt\" font-family=\"sans-serif\" font-size=\"12px\" fill=\"black\">$textval</text>";
             $graph .= "<text x=\"$this->width_of_graph\" y=\"$heightatt\" font-family=\"sans-serif\" font-size=\"12px\" fill=\"black\">$textval</text>";

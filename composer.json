@@ -3,6 +3,13 @@
   "description": "Creates a date-based SVG graph with up to 4 lines.",
   "keywords": ["graph","date","svg"],
   "license": "LGPL-3.0-or-later",
+  "authors": [
+    {
+      "name": "Neil Ludlow",
+      "email": "neil@shortdark.net",
+      "homepage": "https://shortdark.co.uk"
+    }
+  ],
   "require": {
     "php": ">=7.0"
   },
