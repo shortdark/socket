@@ -15,15 +15,10 @@ $ composer require shortdark/socket
 ```php
 <?php
 
-// path to autoload file
 require_once 'vendor/autoload.php';
 
 $socket = new Shortdark\Socket;
 
-// The graph can be anything up to four lines.
-// Data can be integers or floats but the columns must be named col1, col2, col3 and col4.
-// Date must be a string, format: '2021-02-26'
-// The order of the data matters, the array should start with the newest data...
 $dataArray = [
     ['date'=>'2021-03-05', 'col1'=>116, 'col2'=> 156, 'col3'=>125],
     ['date'=>'2021-03-04', 'col1'=>115, 'col2'=> 155, 'col3'=>109],
@@ -33,17 +28,62 @@ $dataArray = [
     ['date'=>'2021-02-26', 'col1'=>111, 'col2'=> 151, 'col3'=>89]
 ];
 
-// The $legends array is optional, it allows you to describe each line.
-// Each title is followed by the latest value, for col1 this example would look like:
-// "Column One Title pre 116 post"
-// The idea is that pre could be '£' or '$' and post could be '%'...
 $legends = ['Graph Title', ['pre ',' post'], ['', 'Column One Title', 'col 2 title', 'col 3 title']];
 
-// echo the SVG graph to the page...
 echo $socket->draw_svg($dataArray, $legends);
-
-
 ```
+
+### Data Array
+
+* The graph can be empty (0 lines) or have up to 4 lines.
+* The number of lines is dependent on the data array that is passed in.
+* The columns must be named 'date', 'col1', 'col2', 'col3' and 'col4'.
+* 'date' must be a string, format: '2021-02-26'.
+* The Y-axis data must be integers or floats.
+* The order of the data matters, the array should start with the newest  and work backwards.
+
+### Legend Array
+
+* The $legends array is optional, it allows you to describe each line.
+* Each title is followed by the latest value. 
+* For col1 this example would look like: "Column One Title pre 116 post"
+* The idea is that 'pre ' could be '£' or '$' and ' post' could be '%'.
+
+### Cutomization
+
+Defaults are shown, below. Each of these variables can be altered, if desired.
+
+    $socket = new Shortdark\Socket;
+    
+    // Change the width of the SVG
+    $socket->width_of_svg = 1400;
+    
+    // Change the height of the SVG
+    $socket->height_of_svg = 540;
+
+    // The distance in pixels between data points on the X-axis
+    $socket->separator = 15;
+
+    // The number of iterations on the Y-axis
+    $socket->iterations = 10;
+    
+    // The text/link in the bottom right hand corner
+    $socket->branding_url = 'https://shortdark.co.uk';
+    $socket->branding_text = 'shortdark.co.uk';
+    $socket->brand_x_from_right = 120;
+    $socket->brand_y_from_bottom = 15;
+
+    // The color of each line
+    $socket->colors = [
+        'col1' => 'green',
+        'col2' => 'blue',
+        'col3' => 'red',
+        'col4' => 'orange'
+    ];
+    
+    echo $socket->draw_svg($dataArray, $legends);
+
+
 
 ### Author
 

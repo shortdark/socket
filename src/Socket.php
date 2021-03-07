@@ -3,7 +3,7 @@
 /**
  * Socket - takes data as an array and plots it as a SVG graph.
  * PHP Version >= 7.0
- * Version 0.0.2
+ * Version 0.0.3
  * @package Socket
  * @link https://github.com/shortdark/socket/
  * @author Neil Ludlow (shortdark) <neil@shortdark.net>
@@ -17,7 +17,11 @@
 /**
  * TODO: Make sure 0 is on the Y-axis if the lines are positive and negative.
  * TODO: Allow work days/all days to be dealt with.
- * TODO: If there is a bank holiday on a Friday and it is not the end of the month we need to add the week line.
+ * TODO: Branding on/off
+ * TODO: Calculate correct dimensions of branding.
+ * TODO: Allow data in a mixed order array to be sorted and presented correctly.
+ * TODO: Allow any four names to be used for the data points, i.e. not just 'col1', etc.
+ * TODO: If there is a bank holiday on a Friday and it is not the end of the month we need to add the week line manually - fix.
  * TODO: The first working day of the month should be on the 1st, 2nd or 3rd unless it is on a Friday and a bank holiday.
  * TODO: Refactoring.
  */
@@ -44,6 +48,21 @@ class Socket {
     // The number of iterations on the Y-axis
     public $iterations = 10;
 
+    public $branding_url = 'https://shortdark.co.uk';
+
+    public $branding_text = 'shortdark.co.uk';
+
+    public $brand_x_from_right = 120;
+
+    public $brand_y_from_bottom = 15;
+
+    public $colors = [
+        'col1' => 'green',
+        'col2' => 'blue',
+        'col3' => 'red',
+        'col4' => 'orange'
+    ];
+
     /**
      * ################
      * ##
@@ -64,8 +83,6 @@ class Socket {
 
     private $days_for_graph;
 
-    private $colors;
-
     private $start_axis;
 
     private $end_axis;
@@ -80,21 +97,25 @@ class Socket {
      * ################
      */
 
-
-    private function assign_colors()
-    {
-        $this->colors = [
-            'col1' => 'green',
-            'col2' => 'blue',
-            'col3' => 'red',
-            'col4' => 'orange'
-        ];
-    }
-
     private function assign_number_of_days()
     {
         // Only add the number of days for the size of graph that is being called
         $this->days_for_graph = intval($this->width_of_graph / $this->separator);
+    }
+
+    private function assign_dimensions_from_config ()
+    {
+        $this->end_of_graph_x = $this->width_of_svg - 30;
+        $this->end_of_graph_y = $this->height_of_svg - 30;
+        $this->width_of_graph = $this->width_of_svg - 40;
+        $this->height_of_graph = $this->height_of_svg - 40;
+    }
+
+    private function add_branding ()
+    {
+        $logox = $this->end_of_graph_x - $this->brand_x_from_right;
+        $logoy = $this->end_of_graph_y - $this->brand_y_from_bottom;
+        return "<a xlink:href=\"{$this->branding_url}\" xlink:title=\"{$this->branding_text}\"><text x=\"$logox\" y=\"$logoy\" font-family=\"sans-serif\" font-size=\"16px\" fill=\"black\">{$this->branding_text}</text></a>";
     }
 
     /**
@@ -105,16 +126,22 @@ class Socket {
      * ################
      */
 
-    public function draw_svg($dataArray, $legends): string
+    public function draw_svg(array $dataArray, array $legends): string
     {
+        $this->assign_dimensions_from_config();
+
         $this->results = $dataArray;
         $this->end_axis = $this->getHighest() ?? 100;
         $this->start_axis = $this->getLowest() ?? 0;
         $this->graphName = $legends[0];
 
-        $this->assign_colors();
         $this->assign_number_of_days();
 
+        return $this->draw_graph($legends);
+    }
+
+    private function draw_graph(array $legends)
+    {
         $graph = $this->set_up_svg_graph();
         $graph .= $this->set_up_svg_axis();
         $graph .= $this->draw_main_graphlines('col1');
@@ -123,11 +150,8 @@ class Socket {
         $graph .= $this->draw_main_graphlines('col4');
         $graph .= $this->add_weeks_months_years();
         $graph .= $this->add_key($legends);
-        $logox = $this->end_of_graph_x - 110;
-        $logoy = $this->end_of_graph_y - 15;
-        $graph .= "<a xlink:href=\"https://shortdark.co.uk/\" xlink:title=\"shortdark.co.uk\"><text x=\"$logox\" y=\"$logoy\" font-family=\"sans-serif\" font-size=\"16px\" fill=\"black\">shortdark.co.uk</text></a>";
+        $graph .= $this->add_branding();
         $graph .= "</svg>";
-
         return $graph;
     }
 
@@ -138,7 +162,7 @@ class Socket {
         while (isset($this->results[$i]['col1'])) {
             for ($j=1; $j <= 4; $j++) {
                 $colName = 'col' . $j;
-                if ($this->results[$i][$colName] > $max) {
+                if (isset($this->results[$i][$colName]) && $this->results[$i][$colName] > $max) {
                     $max = $this->results[$i][$colName];
                 }
             }
@@ -304,10 +328,7 @@ class Socket {
 
     function __construct()
     {
-        $this->end_of_graph_x = $this->width_of_svg - 30;
-        $this->end_of_graph_y = $this->height_of_svg - 30;
-        $this->width_of_graph = $this->width_of_svg - 40;
-        $this->height_of_graph = $this->height_of_svg - 40;
+
     }
 
 }
