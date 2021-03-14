@@ -3,7 +3,7 @@
 /**
  * Socket - takes data as an array and plots it as a SVG graph.
  * PHP Version >= 7.0
- * Version 0.1.0
+ * Version 0.1.1
  * @package Socket
  * @link https://github.com/shortdark/socket/
  * @author Neil Ludlow (shortdark) <neil@shortdark.net>
@@ -328,7 +328,7 @@ class Socket {
         $vertical = 45 + (30 * ($count));
         $upperName = strtoupper($this->graph_name);
         $graph = '';
-        $graph .= "<path fill-opacity=\"0.9\" d=\"M20 12 v{$vertical} h200 v-{$vertical} h-200\" fill=\"white\"></path>";
+        $graph .= "<path fill-opacity=\"0.9\" d=\"M20 12 v{$vertical} h{$this->legend_box_width} v-{$vertical} h-{$this->legend_box_width}\" fill=\"white\"></path>";
         $graph .= "<text x=\"50\" y=\"40\" font-family=\"sans-serif\" font-size=\"16px\" fill=\"black\" text-decoration=\"underline\">{$upperName}</text>";
 
         for ($i=1; $i<=$count; $i++) {
