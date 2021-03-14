@@ -3,7 +3,7 @@
 /**
  * Socket - takes data as an array and plots it as a SVG graph.
  * PHP Version >= 7.0
- * Version 0.0.4
+ * Version 0.1.0
  * @package Socket
  * @link https://github.com/shortdark/socket/
  * @author Neil Ludlow (shortdark) <neil@shortdark.net>
@@ -37,20 +37,44 @@ class Socket {
     // The number of iterations on the Y-axis
     public $iterations = 10;
 
-    public $branding_url = 'https://shortdark.co.uk';
-
-    public $branding_text = 'shortdark.co.uk';
-
-    public $brand_x_from_right = 120;
-
-    public $brand_y_from_bottom = 15;
-
     public $colors = [
         'col1' => 'green',
         'col2' => 'blue',
         'col3' => 'red',
         'col4' => 'orange'
     ];
+
+    // Optional, show a legends box to describe each graphline
+    public $show_legend_box = true;
+
+    // Optional, legends box, specify the width of the box
+    public $legend_box_width = 200;
+
+    // Optional, legends box, title in the legends box, default is 'Key' but could also be the title of the graph
+    public $graph_name = 'Key';
+
+    // Optional, legends box, descriptive strings for each of the 4 graphlines to be displayed in the legends box
+    public $legends = [
+        'col1' => 'Column 1',
+        'col2' => 'Column 2',
+        'col3' => 'Column 3',
+        'col4' => 'Column 4'
+    ];
+
+    // Optional, legends box, we can display the latest value for each line in the legend
+    public $show_last_value_in_legend = false;
+
+    // Optional, legends box, if last value is true, add string that would be before the value in the legend, e.g. $
+    public $legend_pre_value = '';
+
+    // Optional, legends box, if last value is true, add string that would be after the value in the legend, e.g. %
+    public $legend_post_value = '';
+
+    // Optional branding, no action required for no branding
+    public $branding_text = ''; // String e.g. 'shortdark.co.uk'
+    public $branding_url = ''; // String e.g. 'https://shortdark.co.uk'
+    public $brand_x_from_right = 120;
+    public $brand_y_from_bottom = 15;
 
     /**
      * ################
@@ -76,8 +100,6 @@ class Socket {
 
     private $end_axis;
 
-    private $graphName;
-
     /**
      * ################
      * ##
@@ -100,11 +122,14 @@ class Socket {
         $this->height_of_graph = $this->height_of_svg - 40;
     }
 
-    private function add_branding ()
+    private function add_branding (): string
     {
-        $logox = $this->end_of_graph_x - $this->brand_x_from_right;
-        $logoy = $this->end_of_graph_y - $this->brand_y_from_bottom;
-        return "<a xlink:href=\"{$this->branding_url}\" xlink:title=\"{$this->branding_text}\"><text x=\"$logox\" y=\"$logoy\" font-family=\"sans-serif\" font-size=\"16px\" fill=\"black\">{$this->branding_text}</text></a>";
+        if ( '' !== $this->branding_text && '' !== $this->branding_url ) {
+            $logox = $this->end_of_graph_x - $this->brand_x_from_right;
+            $logoy = $this->end_of_graph_y - $this->brand_y_from_bottom;
+            return "<a xlink:href=\"{$this->branding_url}\" xlink:title=\"{$this->branding_text}\"><text x=\"$logox\" y=\"$logoy\" font-family=\"sans-serif\" font-size=\"16px\" fill=\"black\">{$this->branding_text}</text></a>";
+        }
+        return '';
     }
 
     /**
@@ -115,21 +140,20 @@ class Socket {
      * ################
      */
 
-    public function draw_svg(array $dataArray, array $legends): string
+    public function draw_svg(array $dataArray): string
     {
         $this->assign_dimensions_from_config();
 
         $this->results = $dataArray;
         $this->end_axis = $this->getHighest() ?? 100;
         $this->start_axis = $this->getLowest() ?? 0;
-        $this->graphName = $legends[0];
 
         $this->assign_number_of_days();
 
-        return $this->draw_graph($legends);
+        return $this->draw_graph();
     }
 
-    private function draw_graph(array $legends)
+    private function draw_graph()
     {
         $graph = $this->set_up_svg_graph();
         $graph .= $this->set_up_svg_axis();
@@ -138,7 +162,7 @@ class Socket {
         $graph .= $this->draw_main_graphlines('col3');
         $graph .= $this->draw_main_graphlines('col4');
         $graph .= $this->add_weeks_months_years();
-        $graph .= $this->add_key($legends);
+        $graph .= $this->add_key();
         $graph .= $this->add_branding();
         $graph .= "</svg>";
         return $graph;
@@ -293,11 +317,16 @@ class Socket {
         return $graph;
     }
 
-    private function add_key($legends): string
+    private function add_key(): string
     {
-        $count = count($legends[2]);
-        $vertical = 45 + (30 * ($count-1));
-        $upperName = strtoupper($this->graphName);
+        if (false === $this->show_legend_box) {
+            return '';
+        }
+
+        $lastValue='';
+        $count = count($this->legends);
+        $vertical = 45 + (30 * ($count));
+        $upperName = strtoupper($this->graph_name);
         $graph = '';
         $graph .= "<path fill-opacity=\"0.9\" d=\"M20 12 v{$vertical} h200 v-{$vertical} h-200\" fill=\"white\"></path>";
         $graph .= "<text x=\"50\" y=\"40\" font-family=\"sans-serif\" font-size=\"16px\" fill=\"black\" text-decoration=\"underline\">{$upperName}</text>";
@@ -308,8 +337,11 @@ class Socket {
                 $lineYstart = 25 + (30* $i);
                 $lineYend = 45 + (30* $i);
                 $textY = 40 + (30* $i);
+                if (false !== $this->show_last_value_in_legend) {
+                    $lastValue = "{$this->legend_pre_value}{$this->results[0][$column]}{$this->legend_post_value}";
+                }
                 $graph .= "<path d=\"M30 {$lineYstart} L40 {$lineYend}\" stroke-linejoin=\"round\" stroke=\"{$this->colors[$column]}\" fill=\"none\"/>";
-                $graph .= "<text x=\"50\" y=\"{$textY}\" font-family=\"sans-serif\" font-size=\"16px\" fill=\"black\">{$legends[2][$i]} {$legends[1][0]}{$this->results[0][$column]}{$legends[1][1]}</text>";
+                $graph .= "<text x=\"50\" y=\"{$textY}\" font-family=\"sans-serif\" font-size=\"16px\" fill=\"black\">{$this->legends[$column]} {$lastValue}</text>";
             }
 
         }
