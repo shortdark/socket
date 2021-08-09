@@ -56,8 +56,8 @@ Defaults are shown, below. Each of these variables can be altered, if desired.
 * **show_last_value_in_legend** BOOL (default: false)
 * **legend_pre_value** STRING (default: '')
 * **legend_post_value** STRING (default: '')
-* **branding_url** STRING (default: 'https://shortdark.co.uk')
-* **branding_text** STRING (default: 'shortdark.co.uk')
+* **branding_url** STRING (default: '')
+* **branding_text** STRING (default: '')
 * **brand_x_from_right** INT (default: 120)
 * **brand_y_from_bottom** INT (default: 15)
 
