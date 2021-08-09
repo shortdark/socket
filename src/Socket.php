@@ -44,7 +44,7 @@ class Socket {
         'col4' => 'orange'
     ];
 
-    // Optional, show a legends box to describe each graphline
+    // Optional, show a legends box to describe each graph line
     public $show_legend_box = true;
 
     // Optional, legends box, specify the width of the box
@@ -53,7 +53,7 @@ class Socket {
     // Optional, legends box, title in the legends box, default is 'Key' but could also be the title of the graph
     public $graph_name = 'Key';
 
-    // Optional, legends box, descriptive strings for each of the 4 graphlines to be displayed in the legends box
+    // Optional, legends box, descriptive strings for each of the 4 graph lines to be displayed in the legends box
     public $legends = [
         'col1' => 'Column 1',
         'col2' => 'Column 2',
@@ -153,7 +153,7 @@ class Socket {
         return $this->draw_graph();
     }
 
-    private function draw_graph()
+    private function draw_graph(): string
     {
         $graph = $this->set_up_svg_graph();
         $graph .= $this->set_up_svg_axis();
@@ -281,7 +281,7 @@ class Socket {
                     $numericday = date("w", mktime(0, 0, 0, $month, $day, $year));
                     // If there is a bank holiday on a Friday and it is not the end of the month we need to add the week line.
                     // Hard-coding but needs rewriting...
-                    if (5 == $numericday || '2020-12-29' == $dateval ) {
+                    if (5 === $numericday || '2020-12-29' == $dateval ) {
                         $weeknumber = (int)date("W", mktime(0, 0, 0, $month, $day, $year));
                         $graph .= "<path stroke=\"green\" stroke-width=\"0.2\" d=\"M$xvalue 10 v $this->height_of_graph\"/>";
                         if (0 == $weeknumber % 5) {
@@ -346,7 +346,7 @@ class Socket {
         return $graph;
     }
 
-    function __construct()
+    public function __construct()
     {
 
     }
