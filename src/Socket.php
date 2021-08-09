@@ -3,7 +3,7 @@
 /**
  * Socket - takes data as an array and plots it as a SVG graph.
  * PHP Version >= 7.0
- * Version 0.1.1
+ * Version 0.1.2
  * @package Socket
  * @link https://github.com/shortdark/socket/
  * @author Neil Ludlow (shortdark) <neil@shortdark.net>
@@ -111,7 +111,7 @@ class Socket {
     private function assign_number_of_days()
     {
         // Only add the number of days for the size of graph that is being called
-        $this->days_for_graph = intval($this->width_of_graph / $this->separator);
+        $this->days_for_graph = (int)($this->width_of_graph / $this->separator);
     }
 
     private function assign_dimensions_from_config ()
@@ -181,7 +181,7 @@ class Socket {
             }
             $i++;
         }
-        $max = ceil($max);
+        $max = (int) ceil($max);
         if (8 < $max) {
             while ( $max % 10 !== 0 ) {
                 $max++;
@@ -203,7 +203,7 @@ class Socket {
             }
             $i++;
         }
-        $min = floor($min);
+        $min = (int) floor($min);
         if (10 < $min) {
             while ( $min % 10 !== 0 ) {
                 $min--;
@@ -227,7 +227,7 @@ class Socket {
         $start_of_axis = $this->start_axis;
         $end_of_axis = $this->end_axis;
         $data_range = $end_of_axis - $start_of_axis;
-        $iterationsInt = intval($this->iterations);
+        $iterationsInt = $this->iterations;
         $value_per_iteration = $data_range / $iterationsInt;
         for ($i = 0; $i <= $iterationsInt; $i++) {
             $heightatt = $this->end_of_graph_y - ($i * $this->height_of_graph / $iterationsInt);
@@ -244,16 +244,14 @@ class Socket {
         $g = 0;
         $color = $this->colors[$columnName];
         $line='';
-        $start_of_axis = $this->start_axis;
-        $end_of_axis = $this->end_axis;
-        $pixels_per_unit = $this->height_of_graph / ($end_of_axis - $start_of_axis);
-        if ($this->results[$g][$columnName]) {
+        $pixels_per_unit = $this->height_of_graph / ($this->end_axis - $this->start_axis);
+        if (isset($this->results[$g][$columnName])) {
             while (isset($this->results[$g][$columnName]) && $g < $this->days_for_graph) {
                 $xvalue = $this->end_of_graph_x - ($g * $this->separator);
-                $currencyval = floatval($this->results[$g][$columnName]);
-                $yvalue = $this->end_of_graph_y - (($currencyval - $start_of_axis) * $pixels_per_unit);
+                $currencyval = (float)$this->results[$g][$columnName];
+                $yvalue = $this->end_of_graph_y - (($currencyval - $this->start_axis) * $pixels_per_unit);
                 if (10 <= $xvalue) {
-                    if (0 == $g) {
+                    if (0 === $g) {
                         $line = "<path d=\"M$xvalue $yvalue";
                     } else {
                         $line .= " L$xvalue $yvalue";
@@ -279,12 +277,12 @@ class Socket {
                 if (10 <= $xvalue) {
                     $year = substr($dateval, 0, 4);
                     $month = substr($dateval, 5, 2);
-                    $day = intval(substr($dateval, 8, 2));
+                    $day = (int)substr($dateval, 8, 2);
                     $numericday = date("w", mktime(0, 0, 0, $month, $day, $year));
                     // If there is a bank holiday on a Friday and it is not the end of the month we need to add the week line.
                     // Hard-coding but needs rewriting...
                     if (5 == $numericday || '2020-12-29' == $dateval ) {
-                        $weeknumber = intval(date("W", mktime(0, 0, 0, $month, $day, $year)));
+                        $weeknumber = (int)date("W", mktime(0, 0, 0, $month, $day, $year));
                         $graph .= "<path stroke=\"green\" stroke-width=\"0.2\" d=\"M$xvalue 10 v $this->height_of_graph\"/>";
                         if (0 == $weeknumber % 5) {
                             $graph .= "<text x=\"$xvalue\" y=\"50\" font-family=\"sans-serif\" font-size=\"12px\" fill=\"black\">$weeknumber</text>";
