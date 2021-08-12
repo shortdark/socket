@@ -33,12 +33,14 @@ echo $socket->draw_svg($dataArray);
 
 ### Data Array
 
-* The graph can be empty (0 lines) or have up to 4 lines.
+* The graph can be empty (0 lines) or have up to 10 graph lines. 
+* More than 10 graph lines can be passed in, but you would need to manually assign colors for the columns beyond the starting 10.
 * The number of lines is dependent on the data array that is passed in.
-* The columns must be named 'date', 'col1', 'col2', 'col3' and 'col4'.
+* The columns must be named 'date', 'col1', 'col2', 'col3', 'col4', etc.
 * 'date' must be a string, format: '2021-02-26'.
-* The Y-axis data can be integers or floats.
-* The order of the data matters, the array should start with the newest  and work backwards.
+* The Y-axis data can be integers, floats or null.
+* The order of the data matters, the array should start with the newest and work backwards. 
+* It's assumed that the data will be continuous (mon-fri) without large gaps in the data.
 
 ### Optional Cutomization
 
@@ -48,10 +50,10 @@ Defaults are shown, below. Each of these variables can be altered, if desired.
 * **height_of_svg** INT (default: 540)
 * **separator** FLOAT (default: 15)
 * **iterations** INT (default: 10)
-* **colors** ARRAY (default ['col1' => 'green', 'col2' => 'blue', 'col3' => 'red', 'col4' => 'orange'])
+* **colors** ARRAY (default ['col1' => 'dark green', 'col2' => 'medium blue', 'col3' => 'orange red', 'col4' => 'orange', ...])
 * **show_legend_box** BOOL (default: true)
 * **legend_box_width** INT (default: 200)
-* **legends** ARRAY (default ['col1' => 'Column 1', 'col2' => 'Column 2', 'col3' => 'Column 3', 'col4' => 'Column 4'])
+* **legends** ARRAY (default ['col1' => 'Column 1', 'col2' => 'Column 2', 'col3' => 'Column 3', 'col4' => 'Column 4', ...])
 * **graph_name** STRING (default: 'Key')
 * **show_last_value_in_legend** BOOL (default: false)
 * **legend_pre_value** STRING (default: '')
@@ -74,7 +76,7 @@ You can modify any/all of the above like so...
     // The distance in pixels between data points on the X-axis
     $socket->separator = 1.5;
 
-    // The number of iterations on the Y-axis
+    // The number of horizontal lines
     $socket->iterations = 10;
 
     // The color of each line
@@ -104,7 +106,7 @@ You can modify any/all of the above like so...
     $socket->legend_post_value = '&#37;';
 
     // The text/link in the bottom right hand corner
-    $socket->branding_text = 'shortdark.co.uk';
+    $socket->branding_text = 'Shortdark Web Dev';
     $socket->branding_url = 'https://shortdark.co.uk';
     $socket->brand_x_from_right = 0;
     $socket->brand_y_from_bottom = 0;

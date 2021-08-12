@@ -3,7 +3,7 @@
 /**
  * Socket - takes data as an array and plots it as a SVG graph.
  * PHP Version >= 7.0
- * Version 0.1.2
+ * Version 0.1.3
  * @package Socket
  * @link https://github.com/shortdark/socket/
  * @author Neil Ludlow (shortdark) <neil@shortdark.net>
@@ -38,10 +38,16 @@ class Socket {
     public $iterations = 10;
 
     public $colors = [
-        'col1' => 'green',
-        'col2' => 'blue',
-        'col3' => 'red',
-        'col4' => 'orange'
+        'col1' => '#006400', // dark green
+        'col2' => '#0000CD', // medium blue
+        'col3' => '#FF4500', // orange red
+        'col4' => '#FFA500', // orange
+        'col5' => '#00FA9A', // medium spring green
+        'col6' => '#663399', // rebecca purple
+        'col7' => '#98FB98', // pale green
+        'col8' => '#000080', // navy
+        'col9' => '#800000', // maroon
+        'col10' => '#6A5ACD', // slate blue
     ];
 
     // Optional, show a legends box to describe each graph line
@@ -54,12 +60,7 @@ class Socket {
     public $graph_name = 'Key';
 
     // Optional, legends box, descriptive strings for each of the 4 graph lines to be displayed in the legends box
-    public $legends = [
-        'col1' => 'Column 1',
-        'col2' => 'Column 2',
-        'col3' => 'Column 3',
-        'col4' => 'Column 4'
-    ];
+    public $legends = [];
 
     // Optional, legends box, we can display the latest value for each line in the legend
     public $show_last_value_in_legend = false;
@@ -71,7 +72,7 @@ class Socket {
     public $legend_post_value = '';
 
     // Optional branding, no action required for no branding
-    public $branding_text = ''; // String e.g. 'shortdark.co.uk'
+    public $branding_text = ''; // String e.g. 'Shortdark Web Dev'
     public $branding_url = ''; // String e.g. 'https://shortdark.co.uk'
     public $brand_x_from_right = 120;
     public $brand_y_from_bottom = 15;
@@ -99,6 +100,8 @@ class Socket {
     private $start_axis;
 
     private $end_axis;
+
+    private $graph_lines_count;
 
     /**
      * ################
@@ -143,12 +146,13 @@ class Socket {
     public function draw_svg(array $dataArray): string
     {
         $this->assign_dimensions_from_config();
+        $this->assign_number_of_days();
 
         $this->results = $dataArray;
-        $this->end_axis = $this->getHighest() ?? 100;
-        $this->start_axis = $this->getLowest() ?? 0;
 
-        $this->assign_number_of_days();
+        $this->get_data_limits();
+
+        $this->check_legends();
 
         return $this->draw_graph();
     }
@@ -157,10 +161,9 @@ class Socket {
     {
         $graph = $this->set_up_svg_graph();
         $graph .= $this->set_up_svg_axis();
-        $graph .= $this->draw_main_graphlines('col1');
-        $graph .= $this->draw_main_graphlines('col2');
-        $graph .= $this->draw_main_graphlines('col3');
-        $graph .= $this->draw_main_graphlines('col4');
+
+        $graph .= $this->draw_all_graph_lines();
+
         $graph .= $this->add_weeks_months_years();
         $graph .= $this->add_key();
         $graph .= $this->add_branding();
@@ -168,12 +171,42 @@ class Socket {
         return $graph;
     }
 
+    private function get_data_limits()
+    {
+        $this->graph_lines_count = count($this->results);
+        $this->end_axis = $this->getHighest() ?? 100;
+        $this->start_axis = $this->getLowest() ?? 0;
+    }
+
+    private function check_legends ()
+    {
+        for ($i = 1; $i <= $this->graph_lines_count; $i++) {
+            $colName = 'col'.$i;
+            if (empty($this->legends[$colName])) {
+                $this->legends[$colName] = 'Column '.$i;
+            }
+        }
+    }
+
+    private function draw_all_graph_lines(): string
+    {
+        $n = 1;
+        $columnName = 'col' . $n;
+        $output = '';
+        while (isset($this->results[0][$columnName])) {
+            $output .= $this->draw_graph_line($columnName);
+            $n++;
+            $columnName = 'col' . $n;
+        }
+        return $output;
+    }
+
     private function getHighest (): int
     {
         $i=0;
         $max = $this->results[$i]['col1'];
         while (isset($this->results[$i]['col1'])) {
-            for ($j=1; $j <= 4; $j++) {
+            for ($j=1; $j <= $this->graph_lines_count; $j++) {
                 $colName = 'col' . $j;
                 if (isset($this->results[$i][$colName]) && $this->results[$i][$colName] > $max) {
                     $max = $this->results[$i][$colName];
@@ -195,7 +228,7 @@ class Socket {
         $i=0;
         $min = $this->results[$i]['col1'];
         while (isset($this->results[$i]['col1'])) {
-            for ($j=1; $j <= 4; $j++) {
+            for ($j=1; $j <= $this->graph_lines_count; $j++) {
                 $colName = 'col' . $j;
                 if ( isset($this->results[$i][$colName]) && $this->results[$i][$colName] < $min) {
                     $min = $this->results[$i][$colName];
@@ -239,7 +272,7 @@ class Socket {
         return $graph;
     }
 
-    private function draw_main_graphlines($columnName): string
+    private function draw_graph_line($columnName): string
     {
         $g = 0;
         $color = $this->colors[$columnName];
@@ -281,7 +314,7 @@ class Socket {
                     $numericday = date("w", mktime(0, 0, 0, $month, $day, $year));
                     // If there is a bank holiday on a Friday and it is not the end of the month we need to add the week line.
                     // Hard-coding but needs rewriting...
-                    if (5 === $numericday || '2020-12-29' == $dateval ) {
+                    if (5 == $numericday || '2020-12-29' === $dateval ) {
                         $weeknumber = (int)date("W", mktime(0, 0, 0, $month, $day, $year));
                         $graph .= "<path stroke=\"green\" stroke-width=\"0.2\" d=\"M$xvalue 10 v $this->height_of_graph\"/>";
                         if (0 == $weeknumber % 5) {
@@ -293,8 +326,8 @@ class Socket {
                     // Hard-coding for the special case of January 2021, but needs rewriting...
                     if (
                         1 == $dayofmonth ||
-                        ( 1 == $numericday && ( in_array( $dayofmonth, [2,3] ) ) ) ||
-                        ( 1 == $numericday && 4 == $dayofmonth && "01" == $month )
+                        ( 1 == $numericday && 4 == $dayofmonth && "01" == $month ) ||
+                        ( 1 == $numericday && ( in_array( $dayofmonth, [2,3] ) ) )
                     ) {
                         $dayofyear = date("z", mktime(0, 0, 0, $month, $day, $year));
                         $monthwords = date("M", mktime(0, 0, 0, $month, $day, $year));
@@ -325,8 +358,7 @@ class Socket {
         $count = count($this->legends);
         $vertical = 45 + (30 * ($count));
         $upperName = strtoupper($this->graph_name);
-        $graph = '';
-        $graph .= "<path fill-opacity=\"0.9\" d=\"M20 12 v{$vertical} h{$this->legend_box_width} v-{$vertical} h-{$this->legend_box_width}\" fill=\"white\"></path>";
+        $graph = "<path fill-opacity=\"0.9\" d=\"M20 12 v{$vertical} h{$this->legend_box_width} v-{$vertical} h-{$this->legend_box_width}\" fill=\"white\"></path>";
         $graph .= "<text x=\"50\" y=\"40\" font-family=\"sans-serif\" font-size=\"16px\" fill=\"black\" text-decoration=\"underline\">{$upperName}</text>";
 
         for ($i=1; $i<=$count; $i++) {
@@ -350,6 +382,10 @@ class Socket {
     {
 
     }
+
+
+
+
 
 }
 
