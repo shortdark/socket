@@ -1,8 +1,9 @@
 # Shortdark/Socket
 
-Shortdark/Socket takes up to 4 series of date-based data in an array and creates a SVG graph out of it.
+Shortdark/Socket creates an SVG line graph from and array of up to 10 series of date-based data.
 This version currently assumes that the data will be from working days only, i.e. it expects not to have any data from 
 weekends or bank holidays.
+More than 10 lines are possible on the graph if the extra line colors are specified manually.
 
 ## Installation
 
