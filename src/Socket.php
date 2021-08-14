@@ -3,7 +3,7 @@
 /**
  * Socket - takes data as an array and plots it as a SVG graph.
  * PHP Version >= 7.0
- * Version 0.1.5
+ * Version 0.1.6
  * @package Socket
  * @link https://github.com/shortdark/socket/
  * @author Neil Ludlow (shortdark) <neil@shortdark.net>
@@ -173,7 +173,7 @@ class Socket {
 
     private function get_data_limits()
     {
-        $this->graph_lines_count = count($this->results);
+        $this->graph_lines_count = count($this->results[0]) -1;
         $this->end_axis = $this->getHighest() ?? 100;
         $this->start_axis = $this->getLowest() ?? 0;
     }
