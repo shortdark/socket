@@ -3,7 +3,7 @@
 /**
  * Socket - takes data as an array and plots it as a SVG graph.
  * PHP Version >= 7.0
- * Version 0.1.6
+ * Version 0.1.7
  * @package Socket
  * @link https://github.com/shortdark/socket/
  * @author Neil Ludlow (shortdark) <neil@shortdark.net>
@@ -257,17 +257,26 @@ class Socket {
     private function set_up_svg_axis(): string
     {
         $graph = '';
+        $zero_line_drawn = false;
         $start_of_axis = $this->start_axis;
         $end_of_axis = $this->end_axis;
         $data_range = $end_of_axis - $start_of_axis;
         $iterationsInt = $this->iterations;
         $value_per_iteration = $data_range / $iterationsInt;
         for ($i = 0; $i <= $iterationsInt; $i++) {
-            $heightatt = $this->end_of_graph_y - ($i * $this->height_of_graph / $iterationsInt);
-            $textval = $start_of_axis + ($i * $value_per_iteration);
-            $graph .= "<text x=\"1\" y=\"$heightatt\" font-family=\"sans-serif\" font-size=\"12px\" fill=\"black\">$textval</text>";
-            $graph .= "<text x=\"$this->width_of_graph\" y=\"$heightatt\" font-family=\"sans-serif\" font-size=\"12px\" fill=\"black\">$textval</text>";
-            $graph .= "<path stroke=\"black\" stroke-width=\"0.2\" d=\"M10 $heightatt h $this->width_of_graph\"/>";
+            $heightAtt = $this->end_of_graph_y - ($i * $this->height_of_graph / $iterationsInt);
+            $textVal = $start_of_axis + ($i * $value_per_iteration);
+            $graph .= "<text x=\"1\" y=\"$heightAtt\" font-family=\"sans-serif\" font-size=\"12px\" fill=\"black\">$textVal</text>";
+            $graph .= "<text x=\"$this->width_of_graph\" y=\"$heightAtt\" font-family=\"sans-serif\" font-size=\"12px\" fill=\"black\">$textVal</text>";
+            $graph .= "<path stroke=\"black\" stroke-width=\"0.2\" d=\"M10 $heightAtt h $this->width_of_graph\"/>";
+            if (0 === $textVal) {
+                $zero_line_drawn = true;
+            }
+        }
+        if (true !== $zero_line_drawn) {
+            $pixels_per_unit = $this->height_of_graph / ($this->end_axis - $this->start_axis);
+            $heightAtt = $this->end_of_graph_y + $this->start_axis * $pixels_per_unit;
+            $graph .= "<path stroke=\"black\" stroke-width=\"0.4\" d=\"M10 $heightAtt h $this->width_of_graph\"/>";
         }
         return $graph;
     }
@@ -281,8 +290,8 @@ class Socket {
         if (isset($this->results[$g][$columnName])) {
             while (isset($this->results[$g][$columnName]) && $g < $this->days_for_graph) {
                 $xvalue = $this->end_of_graph_x - ($g * $this->separator);
-                $currencyval = (float)$this->results[$g][$columnName];
-                $yvalue = $this->end_of_graph_y - (($currencyval - $this->start_axis) * $pixels_per_unit);
+                $graphVal = (float)$this->results[$g][$columnName];
+                $yvalue = $this->end_of_graph_y - (($graphVal - $this->start_axis) * $pixels_per_unit);
                 if (10 <= $xvalue) {
                     if (0 === $g) {
                         $line = "<path d=\"M$xvalue $yvalue";
