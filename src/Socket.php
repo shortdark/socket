@@ -3,7 +3,7 @@
 /**
  * Socket - takes data as an array and plots it as a SVG graph.
  * PHP Version >= 7.0
- * Version 0.1.7
+ * Version 0.1.8
  * @package Socket
  * @link https://github.com/shortdark/socket/
  * @author Neil Ludlow (shortdark) <neil@shortdark.net>
@@ -258,14 +258,12 @@ class Socket {
     {
         $graph = '';
         $zero_line_drawn = false;
-        $start_of_axis = $this->start_axis;
-        $end_of_axis = $this->end_axis;
-        $data_range = $end_of_axis - $start_of_axis;
+        $data_range = $this->end_axis - $this->start_axis;
         $iterationsInt = $this->iterations;
         $value_per_iteration = $data_range / $iterationsInt;
         for ($i = 0; $i <= $iterationsInt; $i++) {
             $heightAtt = $this->end_of_graph_y - ($i * $this->height_of_graph / $iterationsInt);
-            $textVal = $start_of_axis + ($i * $value_per_iteration);
+            $textVal = $this->start_axis + ($i * $value_per_iteration);
             $graph .= "<text x=\"1\" y=\"$heightAtt\" font-family=\"sans-serif\" font-size=\"12px\" fill=\"black\">$textVal</text>";
             $graph .= "<text x=\"$this->width_of_graph\" y=\"$heightAtt\" font-family=\"sans-serif\" font-size=\"12px\" fill=\"black\">$textVal</text>";
             $graph .= "<path stroke=\"black\" stroke-width=\"0.2\" d=\"M10 $heightAtt h $this->width_of_graph\"/>";
@@ -273,7 +271,7 @@ class Socket {
                 $zero_line_drawn = true;
             }
         }
-        if (true !== $zero_line_drawn) {
+        if (true !== $zero_line_drawn && 0 > $this->start_axis && 0 < $this->end_axis) {
             $pixels_per_unit = $this->height_of_graph / ($this->end_axis - $this->start_axis);
             $heightAtt = $this->end_of_graph_y + $this->start_axis * $pixels_per_unit;
             $graph .= "<path stroke=\"black\" stroke-width=\"0.4\" d=\"M10 $heightAtt h $this->width_of_graph\"/>";
