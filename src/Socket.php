@@ -103,6 +103,8 @@ class Socket {
 
     private $graph_lines_count;
 
+    private $data_points;
+
     /**
      * ################
      * ##
@@ -146,11 +148,13 @@ class Socket {
     public function draw_svg(array $dataArray): string
     {
         $this->assign_dimensions_from_config();
-        $this->assign_number_of_days();
+
 
         $this->results = $dataArray;
 
         $this->get_data_limits();
+
+        $this->assign_number_of_days();
 
         $this->check_legends();
 
@@ -174,6 +178,12 @@ class Socket {
     private function get_data_limits()
     {
         $this->graph_lines_count = count($this->results[0]) -1;
+        $this->data_points = count($this->results);
+
+        if ($this->data_points * $this->separator > $this->end_of_graph_x) {
+            $this->separator = floor($this->end_of_graph_x / $this->data_points);
+        }
+
         $this->end_axis = $this->getHighest() ?? 100;
         $this->start_axis = $this->getLowest() ?? 0;
     }
