@@ -3,7 +3,7 @@
 /**
  * Socket - takes data as an array and plots it as a SVG graph.
  * PHP Version >= 7.0
- * Version 0.1.8
+ * Version 0.1.9
  * @package Socket
  * @link https://github.com/shortdark/socket/
  * @author Neil Ludlow (shortdark) <neil@shortdark.net>
