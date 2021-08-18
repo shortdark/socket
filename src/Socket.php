@@ -3,7 +3,7 @@
 /**
  * Socket - takes data as an array and plots it as a SVG graph.
  * PHP Version >= 7.0
- * Version 0.1.9
+ * Version 0.2.00
  * @package Socket
  * @link https://github.com/shortdark/socket/
  * @author Neil Ludlow (shortdark) <neil@shortdark.net>
@@ -113,10 +113,16 @@ class Socket {
      * ################
      */
 
+    private function modify_separator_to_make_graph_fit_on_screen () {
+        if ($this->data_points * $this->separator > $this->end_of_graph_x) {
+            $this->separator = floor($this->end_of_graph_x / $this->data_points);
+        }
+    }
+
     private function assign_number_of_days()
     {
         // Only add the number of days for the size of graph that is being called
-        $this->days_for_graph = (int)($this->width_of_graph / $this->separator);
+        $this->days_for_graph = (int)$this->data_points;
     }
 
     private function assign_dimensions_from_config ()
@@ -149,12 +155,9 @@ class Socket {
     {
         $this->assign_dimensions_from_config();
 
-
         $this->results = $dataArray;
 
         $this->get_data_limits();
-
-        $this->assign_number_of_days();
 
         $this->check_legends();
 
@@ -180,9 +183,9 @@ class Socket {
         $this->graph_lines_count = count($this->results[0]) -1;
         $this->data_points = count($this->results);
 
-        if ($this->data_points * $this->separator > $this->end_of_graph_x) {
-            $this->separator = floor($this->end_of_graph_x / $this->data_points);
-        }
+        $this->modify_separator_to_make_graph_fit_on_screen();
+
+        $this->assign_number_of_days();
 
         $this->end_axis = $this->getHighest() ?? 100;
         $this->start_axis = $this->getLowest() ?? 0;
@@ -300,7 +303,7 @@ class Socket {
                 $xvalue = $this->end_of_graph_x - ($g * $this->separator);
                 $graphVal = (float)$this->results[$g][$columnName];
                 $yvalue = $this->end_of_graph_y - (($graphVal - $this->start_axis) * $pixels_per_unit);
-                if (10 <= $xvalue) {
+                if (0 <= $xvalue) {
                     if (0 === $g) {
                         $line = "<path d=\"M$xvalue $yvalue";
                     } else {
