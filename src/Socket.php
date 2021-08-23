@@ -294,10 +294,6 @@ class Socket {
 
     private function draw_graph_line($columnName): string
     {
-        //if ($columnName === 'col2') {
-            var_dump($columnName);
-        //}
-
         $g = 0;
         $closed = true;
         $color = $this->colors[$columnName];
@@ -306,23 +302,20 @@ class Socket {
 
         while ($g < $this->days_for_graph) {
             if (!empty($this->results[$g][$columnName])) {
-                $xvalue = $this->end_of_graph_x - ($g * $this->separator);
+                $xValue = $this->end_of_graph_x - ($g * $this->separator);
                 $graphVal = (float)$this->results[$g][$columnName];
-                $yvalue = $this->end_of_graph_y - (($graphVal - $this->start_axis) * $pixels_per_unit);
+                $yValue = $this->end_of_graph_y - (($graphVal - $this->start_axis) * $pixels_per_unit);
 
-                if (0 === $g || $closed == true) {
-                    $line .= "<path d=\"M$xvalue $yvalue";
+                if (0 === $g || $closed === true) {
+                    $line .= "<path d=\"M$xValue $yValue";
                 } else {
-                    $line .= " L$xvalue $yvalue";
+                    $line .= " L$xValue $yValue";
                 }
                 $closed = false;
 
-            } elseif ('' !== $line && $closed != true) {
+            } elseif ('' !== $line && $closed !== true) {
                 $line .= "\" stroke-linejoin=\"round\" stroke=\"$color\" fill=\"none\"/>";
                 $closed = true;
-            }
-            if (null == $this->results[$g][$columnName]) {
-                var_dump($this->results[$g]['date']);
             }
             $g++;
         }
@@ -344,8 +337,8 @@ class Socket {
             $graph .= "<text x=\"$weeklegendx\" y=\"30\" font-family=\"sans-serif\" font-size=\"12px\" fill=\"black\">Week Numbers</text>";
             while (!empty($this->results[$d]['date'])) {
                 $dateval = $this->results[$d]['date'];
-                $xvalue = $this->end_of_graph_x - ($d * $this->separator);
-                if (10 <= $xvalue) {
+                $xValue = $this->end_of_graph_x - ($d * $this->separator);
+                if (10 <= $xValue) {
                     $year = substr($dateval, 0, 4);
                     $month = substr($dateval, 5, 2);
                     $day = (int)substr($dateval, 8, 2);
@@ -354,9 +347,9 @@ class Socket {
                     // Hard-coding but needs rewriting...
                     if (5 == $numericday || '2020-12-29' === $dateval ) {
                         $weeknumber = (int)date("W", mktime(0, 0, 0, $month, $day, $year));
-                        $graph .= "<path stroke=\"green\" stroke-width=\"0.2\" d=\"M$xvalue 10 v $this->height_of_graph\"/>";
+                        $graph .= "<path stroke=\"green\" stroke-width=\"0.2\" d=\"M$xValue 10 v $this->height_of_graph\"/>";
                         if (0 == $weeknumber % 5) {
-                            $graph .= "<text x=\"$xvalue\" y=\"50\" font-family=\"sans-serif\" font-size=\"12px\" fill=\"black\">$weeknumber</text>";
+                            $graph .= "<text x=\"$xValue\" y=\"50\" font-family=\"sans-serif\" font-size=\"12px\" fill=\"black\">$weeknumber</text>";
                         }
                     }
                     $dayofmonth = date("j", mktime(0, 0, 0, $month, $day, $year));
@@ -370,13 +363,13 @@ class Socket {
                         $dayofyear = date("z", mktime(0, 0, 0, $month, $day, $year));
                         $monthwords = date("M", mktime(0, 0, 0, $month, $day, $year));
                         $yearwords = date("Y", mktime(0, 0, 0, $month, $day, $year));
-                        $graph .= "<path stroke=\"black\" stroke-width=\"0.4\" d=\"M$xvalue 10 v $this->height_of_graph\"/>";
+                        $graph .= "<path stroke=\"black\" stroke-width=\"0.4\" d=\"M$xValue 10 v $this->height_of_graph\"/>";
                         $monthlegendy = $this->height_of_graph + 20;
-                        $graph .= "<text x=\"$xvalue\" y=\"$monthlegendy\" font-family=\"sans-serif\" font-size=\"12px\" fill=\"black\">$monthwords</text>";
+                        $graph .= "<text x=\"$xValue\" y=\"$monthlegendy\" font-family=\"sans-serif\" font-size=\"12px\" fill=\"black\">$monthwords</text>";
                         // Hard-coding for the special case of January 2021, but needs rewriting...
                         if (0 == $dayofyear || ( 3 == $dayofyear && '2021' == $year ) ) {
                             $yearlegendy = $this->height_of_graph + 35;
-                            $graph .= "<text x=\"$xvalue\" y=\"$yearlegendy\" font-family=\"sans-serif\" font-size=\"12px\" fill=\"black\">$yearwords</text>";
+                            $graph .= "<text x=\"$xValue\" y=\"$yearlegendy\" font-family=\"sans-serif\" font-size=\"12px\" fill=\"black\">$yearwords</text>";
                         }
                     }
                 }
