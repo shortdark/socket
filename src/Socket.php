@@ -206,7 +206,7 @@ class Socket {
         $n = 1;
         $columnName = 'col' . $n;
         $output = '';
-        while (isset($this->results[0][$columnName])) {
+        while ($n <= $this->graph_lines_count) {
             $output .= $this->draw_graph_line($columnName);
             $n++;
             $columnName = 'col' . $n;
@@ -218,7 +218,7 @@ class Socket {
     {
         $i=0;
         $max = $this->results[$i]['col1'];
-        while (isset($this->results[$i]['col1'])) {
+        while ($i <= $this->data_points) {
             for ($j=1; $j <= $this->graph_lines_count; $j++) {
                 $colName = 'col' . $j;
                 if (isset($this->results[$i][$colName]) && $this->results[$i][$colName] > $max) {
@@ -240,7 +240,7 @@ class Socket {
     {
         $i=0;
         $min = $this->results[$i]['col1'];
-        while (isset($this->results[$i]['col1'])) {
+        while ($i <= $this->data_points) {
             for ($j=1; $j <= $this->graph_lines_count; $j++) {
                 $colName = 'col' . $j;
                 if ( isset($this->results[$i][$colName]) && $this->results[$i][$colName] < $min) {
@@ -294,26 +294,44 @@ class Socket {
 
     private function draw_graph_line($columnName): string
     {
+        //if ($columnName === 'col2') {
+            var_dump($columnName);
+        //}
+
         $g = 0;
+        $closed = true;
         $color = $this->colors[$columnName];
         $line='';
         $pixels_per_unit = $this->height_of_graph / ($this->end_axis - $this->start_axis);
-        if (isset($this->results[$g][$columnName])) {
-            while (isset($this->results[$g][$columnName]) && $g < $this->days_for_graph) {
+
+        while ($g < $this->days_for_graph) {
+            if (!empty($this->results[$g][$columnName])) {
                 $xvalue = $this->end_of_graph_x - ($g * $this->separator);
                 $graphVal = (float)$this->results[$g][$columnName];
                 $yvalue = $this->end_of_graph_y - (($graphVal - $this->start_axis) * $pixels_per_unit);
-                if (0 <= $xvalue) {
-                    if (0 === $g) {
-                        $line = "<path d=\"M$xvalue $yvalue";
-                    } else {
-                        $line .= " L$xvalue $yvalue";
-                    }
+
+                if (0 === $g || $closed == true) {
+                    $line .= "<path d=\"M$xvalue $yvalue";
+                } else {
+                    $line .= " L$xvalue $yvalue";
                 }
-                $g++;
+                $closed = false;
+
+            } elseif ('' !== $line && $closed != true) {
+                $line .= "\" stroke-linejoin=\"round\" stroke=\"$color\" fill=\"none\"/>";
+                $closed = true;
             }
+            if (null == $this->results[$g][$columnName]) {
+                var_dump($this->results[$g]['date']);
+            }
+            $g++;
+        }
+
+        if (true !== $closed) {
             $line .= "\" stroke-linejoin=\"round\" stroke=\"$color\" fill=\"none\"/>";
         }
+
+
         return $line;
     }
 
@@ -324,7 +342,7 @@ class Socket {
         if ($this->results[$d]['date']) {
             $weeklegendx = ($this->width_of_graph / 2) - 20;
             $graph .= "<text x=\"$weeklegendx\" y=\"30\" font-family=\"sans-serif\" font-size=\"12px\" fill=\"black\">Week Numbers</text>";
-            while ($this->results[$d]['date']) {
+            while (!empty($this->results[$d]['date'])) {
                 $dateval = $this->results[$d]['date'];
                 $xvalue = $this->end_of_graph_x - ($d * $this->separator);
                 if (10 <= $xvalue) {
@@ -374,26 +392,22 @@ class Socket {
             return '';
         }
 
-        $lastValue='';
-        $count = count($this->legends);
-        $vertical = 45 + (30 * ($count));
+        $vertical = 45 + (30 * ($this->graph_lines_count));
         $upperName = strtoupper($this->graph_name);
         $graph = "<path fill-opacity=\"0.9\" d=\"M20 12 v{$vertical} h{$this->legend_box_width} v-{$vertical} h-{$this->legend_box_width}\" fill=\"white\"></path>";
         $graph .= "<text x=\"50\" y=\"40\" font-family=\"sans-serif\" font-size=\"16px\" fill=\"black\" text-decoration=\"underline\">{$upperName}</text>";
 
-        for ($i=1; $i<=$count; $i++) {
+        for ($i=1; $i<=$this->graph_lines_count; $i++) {
             $column = 'col' . $i;
-            if (isset($this->results[0][$column])) {
-                $lineYstart = 25 + (30* $i);
-                $lineYend = 45 + (30* $i);
-                $textY = 40 + (30* $i);
-                if (false !== $this->show_last_value_in_legend) {
-                    $lastValue = "{$this->legend_pre_value}{$this->results[0][$column]}{$this->legend_post_value}";
-                }
-                $graph .= "<path d=\"M30 {$lineYstart} L40 {$lineYend}\" stroke-linejoin=\"round\" stroke=\"{$this->colors[$column]}\" fill=\"none\"/>";
-                $graph .= "<text x=\"50\" y=\"{$textY}\" font-family=\"sans-serif\" font-size=\"16px\" fill=\"black\">{$this->legends[$column]} {$lastValue}</text>";
+            $lastValue = '';
+            $lineYstart = 25 + (30* $i);
+            $lineYend = 45 + (30* $i);
+            $textY = 40 + (30* $i);
+            if (false !== $this->show_last_value_in_legend && !empty($this->results[0][$column])) {
+                $lastValue = "{$this->legend_pre_value}{$this->results[0][$column]}{$this->legend_post_value}";
             }
-
+            $graph .= "<path d=\"M30 {$lineYstart} L40 {$lineYend}\" stroke-linejoin=\"round\" stroke=\"{$this->colors[$column]}\" fill=\"none\"/>";
+            $graph .= "<text x=\"50\" y=\"{$textY}\" font-family=\"sans-serif\" font-size=\"16px\" fill=\"black\">{$this->legends[$column]} {$lastValue}</text>";
         }
         return $graph;
     }
