@@ -3,7 +3,7 @@
 /**
  * Socket - takes data as an array and plots it as a SVG graph.
  * PHP Version >= 7.0
- * Version 0.2.01
+ * Version 0.2.02
  * @package Socket
  * @link https://github.com/shortdark/socket/
  * @author Neil Ludlow (shortdark) <neil@shortdark.net>
@@ -95,8 +95,6 @@ class Socket {
 
     private $height_of_graph;
 
-    private $days_for_graph;
-
     private $start_axis;
 
     private $end_axis;
@@ -117,12 +115,6 @@ class Socket {
         if ($this->data_points * $this->separator > $this->end_of_graph_x) {
             $this->separator = floor($this->end_of_graph_x / $this->data_points);
         }
-    }
-
-    private function assign_number_of_days()
-    {
-        // Only add the number of days for the size of graph that is being called
-        $this->days_for_graph = (int)$this->data_points;
     }
 
     private function assign_dimensions_from_config ()
@@ -184,8 +176,6 @@ class Socket {
         $this->data_points = count($this->results);
 
         $this->modify_separator_to_make_graph_fit_on_screen();
-
-        $this->assign_number_of_days();
 
         $this->end_axis = $this->getHighest() ?? 100;
         $this->start_axis = $this->getLowest() ?? 0;
@@ -300,8 +290,8 @@ class Socket {
         $line='';
         $pixels_per_unit = $this->height_of_graph / ($this->end_axis - $this->start_axis);
 
-        while ($g < $this->days_for_graph) {
-            if (!empty($this->results[$g][$columnName])) {
+        while ($g <= $this->data_points) {
+            if (isset($this->results[$g][$columnName]) && null !== $this->results[$g][$columnName]) {
                 $xValue = $this->end_of_graph_x - ($g * $this->separator);
                 $graphVal = (float)$this->results[$g][$columnName];
                 $yValue = $this->end_of_graph_y - (($graphVal - $this->start_axis) * $pixels_per_unit);
