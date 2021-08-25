@@ -113,7 +113,7 @@ class Socket {
 
     private function modify_separator_to_make_graph_fit_on_screen () {
         if ($this->data_points * $this->separator > $this->end_of_graph_x) {
-            $this->separator = floor($this->end_of_graph_x / $this->data_points);
+            $this->separator = $this->width_of_graph / $this->data_points;
         }
     }
 
