@@ -1,8 +1,10 @@
 # Shortdark/Socket
 
 Shortdark/Socket creates an SVG line graph from and array of up to 10 series of date-based data.
-This version currently assumes that the data will be from working days only, i.e. it expects not to have any data from 
-weekends or bank holidays.
+This version currently assumes that the data will be from week days only, i.e. it expects not to have any data from 
+weekends.
+Public holidays should be included in the array.
+Null values are not represented by a line, graph lines that contain null values will have gaps.
 More than 10 lines are possible on the graph if the extra line colors are specified manually.
 
 ## Installation
@@ -40,8 +42,10 @@ echo $socket->draw_svg($dataArray);
 * The columns must be named 'date', 'col1', 'col2', 'col3', 'col4', etc.
 * 'date' must be a string, format: '2021-02-26'.
 * The Y-axis data can be integers, floats or null.
-* The order of the data matters, the array should start with the newest and work backwards. 
-* It's assumed that the data will be continuous (mon-fri) without large gaps in the data.
+* Null values will not be shown on the graph.
+* The order of the data matters, the array should start with the newest date and work backwards. 
+* It's assumed that the data will be continuous (mon-fri) without gaps in the data.
+* Public holidays should also be included in the array with either the same value from the previous day, or with the value as null.
 
 ### Optional Cutomization
 
