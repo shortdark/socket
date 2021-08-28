@@ -3,7 +3,7 @@
 /**
  * Socket - takes data as an array and plots it as a SVG graph.
  * PHP Version >= 7.0
- * Version 0.2.03
+ * Version 0.2.04
  * @package Socket
  * @link https://github.com/shortdark/socket/
  * @author Neil Ludlow (shortdark) <neil@shortdark.net>
@@ -113,7 +113,7 @@ class Socket {
 
     private function modify_separator_to_make_graph_fit_on_screen () {
         if ($this->data_points * $this->separator > $this->end_of_graph_x) {
-            $this->separator = $this->width_of_graph / $this->data_points;
+            $this->separator = $this->width_of_graph / ($this->data_points - 1);
         }
     }
 
@@ -320,53 +320,67 @@ class Socket {
 
     private function add_weeks_months_years(): string
     {
-        $d = 0;
+        $d = $this->data_points -1;
         $graph = '';
+        $currentMonth = 0;
+        $currentYear = 0;
         if ($this->results[$d]['date']) {
-            $weeklegendx = ($this->width_of_graph / 2) - 20;
-            $graph .= "<text x=\"$weeklegendx\" y=\"30\" font-family=\"sans-serif\" font-size=\"12px\" fill=\"black\">Week Numbers</text>";
-            while (!empty($this->results[$d]['date'])) {
-                $dateval = $this->results[$d]['date'];
+            $weekLegendX = ($this->width_of_graph / 2) - 20;
+            $graph .= "<text x=\"$weekLegendX\" y=\"30\" font-family=\"sans-serif\" font-size=\"12px\" fill=\"black\">Week Numbers</text>";
+            while (0 <= $d) {
+                $dateString = $this->results[$d]['date'];
                 $xValue = $this->end_of_graph_x - ($d * $this->separator);
-                if (10 <= $xValue) {
-                    $year = substr($dateval, 0, 4);
-                    $month = substr($dateval, 5, 2);
-                    $day = (int)substr($dateval, 8, 2);
-                    $numericday = date("w", mktime(0, 0, 0, $month, $day, $year));
-                    // If there is a bank holiday on a Friday and it is not the end of the month we need to add the week line.
-                    // Hard-coding but needs rewriting...
-                    if (5 == $numericday || '2020-12-29' === $dateval ) {
-                        $weeknumber = (int)date("W", mktime(0, 0, 0, $month, $day, $year));
-                        $graph .= "<path stroke=\"green\" stroke-width=\"0.2\" d=\"M$xValue 10 v $this->height_of_graph\"/>";
-                        if (0 == $weeknumber % 5) {
-                            $graph .= "<text x=\"$xValue\" y=\"50\" font-family=\"sans-serif\" font-size=\"12px\" fill=\"black\">$weeknumber</text>";
-                        }
+                if (0 <= $xValue) {
+                    $year = (int) substr($dateString, 0, 4);
+                    $month = (int) substr($dateString, 5, 2);
+                    $day = (int) substr($dateString, 8, 2);
+                    $dayOfWeek = (int) date("w", mktime(0, 0, 0, $month, $day, $year));
+                    if (5 === $dayOfWeek) {
+                        $graph .= $this->drawWeekLine($month, $day, $year, $xValue);
                     }
-                    $dayofmonth = date("j", mktime(0, 0, 0, $month, $day, $year));
-                    // The first working day of the month should be on the 1st, 2nd or 3rd unless it is on a Friday and a bank holiday.
-                    // Hard-coding for the special case of January 2021, but needs rewriting...
-                    if (
-                        1 == $dayofmonth ||
-                        ( 1 == $numericday && 4 == $dayofmonth && "01" == $month ) ||
-                        ( 1 == $numericday && ( in_array( $dayofmonth, [2,3] ) ) )
-                    ) {
-                        $dayofyear = date("z", mktime(0, 0, 0, $month, $day, $year));
-                        $monthwords = date("M", mktime(0, 0, 0, $month, $day, $year));
-                        $yearwords = date("Y", mktime(0, 0, 0, $month, $day, $year));
-                        $graph .= "<path stroke=\"black\" stroke-width=\"0.4\" d=\"M$xValue 10 v $this->height_of_graph\"/>";
-                        $monthlegendy = $this->height_of_graph + 20;
-                        $graph .= "<text x=\"$xValue\" y=\"$monthlegendy\" font-family=\"sans-serif\" font-size=\"12px\" fill=\"black\">$monthwords</text>";
-                        // Hard-coding for the special case of January 2021, but needs rewriting...
-                        if (0 == $dayofyear || ( 3 == $dayofyear && '2021' == $year ) ) {
-                            $yearlegendy = $this->height_of_graph + 35;
-                            $graph .= "<text x=\"$xValue\" y=\"$yearlegendy\" font-family=\"sans-serif\" font-size=\"12px\" fill=\"black\">$yearwords</text>";
-                        }
+                    if ($currentMonth !== $month) {
+                        $graph .= $this->drawMonthLine($month, $day, $year, $xValue, $d);
+                        $currentMonth = $month;
+                    }
+                    if ($currentYear !== $year) {
+                        $graph .= $this->drawYearValue($month, $day, $year, $xValue);
+                        $currentYear = $year;
                     }
                 }
-                $d++;
+                $d--;
             }
         }
         return $graph;
+    }
+
+    private function drawWeekLine(int $month, int $day, int $year, float $xValue): string
+    {
+        $weekNumber = (int) date("W", mktime(0, 0, 0, $month, $day, $year));
+        $output = "<path stroke=\"green\" stroke-width=\"0.2\" d=\"M$xValue 10 v $this->height_of_graph\"/>";
+        if (0 === $weekNumber % 5) {
+            $output .= "<text x=\"$xValue\" y=\"50\" font-family=\"sans-serif\" font-size=\"12px\" fill=\"black\">$weekNumber</text>";
+        }
+        return $output;
+    }
+
+    private function drawMonthLine(int $month, int $day, int $year, float $xValue, $d): string
+    {
+        $output = '';
+        $monthWords = date("M", mktime(0, 0, 0, $month, $day, $year));
+        if ($d !== $this->data_points - 1) {
+            $output .= "<path stroke=\"black\" stroke-width=\"0.4\" d=\"M$xValue 10 v $this->height_of_graph\"/>";
+        }
+        $monthLegendY = $this->height_of_graph + 20;
+        $output .= "<text x=\"$xValue\" y=\"$monthLegendY\" font-family=\"sans-serif\" font-size=\"12px\" fill=\"black\">$monthWords</text>";
+
+        return $output;
+    }
+
+    private function drawYearValue(int $month, int $day, int $year, float $xValue): string
+    {
+        $yearLegendY = $this->height_of_graph + 35;
+        $yearWords = date("Y", mktime(0, 0, 0, $month, $day, $year));
+        return "<text x=\"$xValue\" y=\"$yearLegendY\" font-family=\"sans-serif\" font-size=\"12px\" fill=\"black\">$yearWords</text>";
     }
 
     private function add_key(): string
