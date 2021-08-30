@@ -3,7 +3,7 @@
 /**
  * Socket - takes data as an array and plots it as a SVG graph.
  * PHP Version >= 7.0
- * Version 0.2.04
+ * Version 0.2.05
  * @package Socket
  * @link https://github.com/shortdark/socket/
  * @author Neil Ludlow (shortdark) <neil@shortdark.net>
@@ -49,6 +49,8 @@ class Socket {
         'col9' => '#800000', // maroon
         'col10' => '#6A5ACD', // slate blue
     ];
+
+    public $show_week_numbers = false;
 
     // Optional, show a legends box to describe each graph line
     public $show_legend_box = true;
@@ -106,39 +108,7 @@ class Socket {
     /**
      * ################
      * ##
-     * ##  SETUP METHODS
-     * ##
-     * ################
-     */
-
-    private function modify_separator_to_make_graph_fit_on_screen () {
-        if ($this->data_points * $this->separator > $this->end_of_graph_x) {
-            $this->separator = $this->width_of_graph / ($this->data_points - 1);
-        }
-    }
-
-    private function assign_dimensions_from_config ()
-    {
-        $this->end_of_graph_x = $this->width_of_svg - 30;
-        $this->end_of_graph_y = $this->height_of_svg - 30;
-        $this->width_of_graph = $this->width_of_svg - 40;
-        $this->height_of_graph = $this->height_of_svg - 40;
-    }
-
-    private function add_branding (): string
-    {
-        if ( '' !== $this->branding_text && '' !== $this->branding_url ) {
-            $logox = $this->end_of_graph_x - $this->brand_x_from_right;
-            $logoy = $this->end_of_graph_y - $this->brand_y_from_bottom;
-            return "<a xlink:href=\"{$this->branding_url}\" xlink:title=\"{$this->branding_text}\"><text x=\"$logox\" y=\"$logoy\" font-family=\"sans-serif\" font-size=\"16px\" fill=\"black\">{$this->branding_text}</text></a>";
-        }
-        return '';
-    }
-
-    /**
-     * ################
-     * ##
-     * ##  METHODS
+     * ##  PUBLIC METHODS
      * ##
      * ################
      */
@@ -155,6 +125,14 @@ class Socket {
 
         return $this->draw_graph();
     }
+
+    /**
+     * ################
+     * ##
+     * ##  METHODS
+     * ##
+     * ################
+     */
 
     private function draw_graph(): string
     {
@@ -179,6 +157,28 @@ class Socket {
 
         $this->end_axis = $this->getHighest() ?? 100;
         $this->start_axis = $this->getLowest() ?? 0;
+    }
+
+    private function modify_separator_to_make_graph_fit_on_screen () {
+        $this->separator = $this->width_of_graph / ($this->data_points - 1);
+    }
+
+    private function assign_dimensions_from_config ()
+    {
+        $this->end_of_graph_x = $this->width_of_svg - 30;
+        $this->end_of_graph_y = $this->height_of_svg - 30;
+        $this->width_of_graph = $this->width_of_svg - 40;
+        $this->height_of_graph = $this->height_of_svg - 40;
+    }
+
+    private function add_branding (): string
+    {
+        if ( '' !== $this->branding_text && '' !== $this->branding_url ) {
+            $logox = $this->end_of_graph_x - $this->brand_x_from_right;
+            $logoy = $this->end_of_graph_y - $this->brand_y_from_bottom;
+            return "<a xlink:href=\"{$this->branding_url}\" xlink:title=\"{$this->branding_text}\"><text x=\"$logox\" y=\"$logoy\" font-family=\"sans-serif\" font-size=\"16px\" fill=\"black\">{$this->branding_text}</text></a>";
+        }
+        return '';
     }
 
     private function check_legends ()
@@ -325,8 +325,10 @@ class Socket {
         $currentMonth = 0;
         $currentYear = 0;
         if ($this->results[$d]['date']) {
-            $weekLegendX = ($this->width_of_graph / 2) - 20;
-            $graph .= "<text x=\"$weekLegendX\" y=\"30\" font-family=\"sans-serif\" font-size=\"12px\" fill=\"black\">Week Numbers</text>";
+            if (true === $this->show_week_numbers) {
+                $weekLegendX = ($this->width_of_graph / 2) - 20;
+                $graph .= "<text x=\"$weekLegendX\" y=\"30\" font-family=\"sans-serif\" font-size=\"12px\" fill=\"black\">Week Numbers</text>";
+            }
             while (0 <= $d) {
                 $dateString = $this->results[$d]['date'];
                 $xValue = $this->end_of_graph_x - ($d * $this->separator);
@@ -357,7 +359,7 @@ class Socket {
     {
         $weekNumber = (int) date("W", mktime(0, 0, 0, $month, $day, $year));
         $output = "<path stroke=\"green\" stroke-width=\"0.2\" d=\"M$xValue 10 v $this->height_of_graph\"/>";
-        if (0 === $weekNumber % 5) {
+        if (0 === $weekNumber % 5 && true === $this->show_week_numbers) {
             $output .= "<text x=\"$xValue\" y=\"50\" font-family=\"sans-serif\" font-size=\"12px\" fill=\"black\">$weekNumber</text>";
         }
         return $output;
@@ -408,14 +410,6 @@ class Socket {
         }
         return $graph;
     }
-
-    public function __construct()
-    {
-
-    }
-
-
-
 
 
 }
