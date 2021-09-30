@@ -43,8 +43,8 @@ echo $socket->draw_svg($dataArray);
 * 'date' must be a string, format: '2021-02-26'.
 * The Y-axis data can be integers, floats or null.
 * Null values will not be shown on the graph.
-* The order of the data matters, the array should start with the newest date and work backwards. 
-* It's assumed that the data will be continuous (mon-fri) without gaps in the data.
+* The array should start with the newest date and work backwards. 
+* It's assumed that the data will be continuous (mon-fri) without gaps in the data. Data can be 7 days a week, however, the week lines are currently on Friday.
 * Public holidays should also be included in the array with either the same value from the previous day, or with the value as null.
 
 ### Optional Cutomization
@@ -53,7 +53,6 @@ Defaults are shown, below. Each of these variables can be altered, if desired.
 
 * **width_of_svg** INT (default: 1400)
 * **height_of_svg** INT (default: 540)
-* **separator** FLOAT (default: 15)
 * **iterations** INT (default: 10)
 * **colors** ARRAY (default ['col1' => 'dark green', 'col2' => 'medium blue', 'col3' => 'orange red', 'col4' => 'orange', ...])
 * **show_week_numbers** (default: false)
@@ -69,7 +68,7 @@ Defaults are shown, below. Each of these variables can be altered, if desired.
 * **brand_x_from_right** INT (default: 120)
 * **brand_y_from_bottom** INT (default: 15)
 
-You can modify any/all of the above like so...
+You can modify any/all the above like so...
 
     $socket = new Shortdark\Socket;
     
@@ -78,9 +77,6 @@ You can modify any/all of the above like so...
     
     // Change the height of the SVG
     $socket->height_of_svg = 500;
-
-    // The distance in pixels between data points on the X-axis
-    $socket->separator = 1.5;
 
     // The number of horizontal lines
     $socket->iterations = 10;
