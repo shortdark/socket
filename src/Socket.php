@@ -3,7 +3,7 @@
 /**
  * Socket - takes data as an array and plots it as a SVG graph.
  * PHP Version >= 7.0
- * Version 0.2.06
+ * Version 0.3.01
  * @package Socket
  * @link https://github.com/shortdark/socket/
  * @author Neil Ludlow (shortdark) <neil@shortdark.net>
@@ -15,6 +15,7 @@
  */
 
 namespace Shortdark;
+
 class Socket {
 
     /**
@@ -98,11 +99,17 @@ class Socket {
 
     private $end_axis;
 
-    private $separator;
+    private $pixels_per_unit_x;
+
+    private $pixels_per_unit_y;
 
     private $graph_lines_count;
 
-    private $data_points;
+    private $number_of_days;
+
+    private $dataPoints;
+
+
 
     /**
      * ################
@@ -112,11 +119,12 @@ class Socket {
      * ################
      */
 
-    public function draw_svg(array $dataArray): string
+    public function draw_svg(array $dataArray, array $dataPointsArray=[]): string
     {
         $this->assign_dimensions_from_config();
 
         $this->results = $dataArray;
+        $this->dataPoints = $dataPointsArray;
 
         $this->get_data_limits();
 
@@ -140,6 +148,8 @@ class Socket {
 
         $graph .= $this->draw_all_graph_lines();
 
+        $graph .= $this->add_data_points();
+
         $graph .= $this->add_weeks_months_years();
         $graph .= $this->add_key();
         $graph .= $this->add_branding();
@@ -150,16 +160,18 @@ class Socket {
     private function get_data_limits()
     {
         $this->graph_lines_count = count($this->results[0]) -1;
-        $this->data_points = count($this->results);
+        $this->number_of_days = count($this->results);
 
         $this->modify_separator_to_make_graph_fit_on_screen();
 
         $this->end_axis = $this->getHighest() ?? 100;
         $this->start_axis = $this->getLowest() ?? 0;
+
+        $this->pixels_per_unit_y = $this->height_of_graph / ($this->end_axis - $this->start_axis);
     }
 
     private function modify_separator_to_make_graph_fit_on_screen () {
-        $this->separator = $this->width_of_graph / ($this->data_points - 1);
+        $this->pixels_per_unit_x = $this->width_of_graph / ($this->number_of_days - 1);
     }
 
     private function assign_dimensions_from_config ()
@@ -207,7 +219,7 @@ class Socket {
     {
         $i=0;
         $max = $this->results[$i]['col1'];
-        while ($i <= $this->data_points) {
+        while ($i <= $this->number_of_days) {
             for ($j=1; $j <= $this->graph_lines_count; $j++) {
                 $colName = 'col' . $j;
                 if (isset($this->results[$i][$colName]) && $this->results[$i][$colName] > $max) {
@@ -229,7 +241,7 @@ class Socket {
     {
         $i=0;
         $min = $this->results[$i]['col1'];
-        while ($i <= $this->data_points) {
+        while ($i <= $this->number_of_days) {
             for ($j=1; $j <= $this->graph_lines_count; $j++) {
                 $colName = 'col' . $j;
                 if ( isset($this->results[$i][$colName]) && $this->results[$i][$colName] < $min) {
@@ -274,8 +286,7 @@ class Socket {
             }
         }
         if (true !== $zero_line_drawn && 0 > $this->start_axis && 0 < $this->end_axis) {
-            $pixels_per_unit = $this->height_of_graph / ($this->end_axis - $this->start_axis);
-            $heightAtt = $this->end_of_graph_y + $this->start_axis * $pixels_per_unit;
+            $heightAtt = $this->end_of_graph_y + $this->start_axis * $this->pixels_per_unit_y;
             $graph .= "<path stroke=\"black\" stroke-width=\"0.4\" d=\"M10 $heightAtt h $this->width_of_graph\"/>";
         }
         return $graph;
@@ -287,13 +298,12 @@ class Socket {
         $closed = true;
         $color = $this->colors[$columnName];
         $line='';
-        $pixels_per_unit = $this->height_of_graph / ($this->end_axis - $this->start_axis);
 
-        while ($g <= $this->data_points) {
+        while ($g <= $this->number_of_days) {
             if (isset($this->results[$g][$columnName]) && null !== $this->results[$g][$columnName]) {
-                $xValue = $this->end_of_graph_x - ($g * $this->separator);
+                $xValue = $this->end_of_graph_x - ($g * $this->pixels_per_unit_x);
                 $graphVal = (float)$this->results[$g][$columnName];
-                $yValue = $this->end_of_graph_y - (($graphVal - $this->start_axis) * $pixels_per_unit);
+                $yValue = $this->end_of_graph_y - (($graphVal - $this->start_axis) * $this->pixels_per_unit_y);
 
                 if (0 === $g || $closed === true) {
                     $line .= "<path d=\"M$xValue $yValue";
@@ -317,9 +327,45 @@ class Socket {
         return $line;
     }
 
+    private function add_data_points (): string
+    {
+        $graph = '';
+        if (empty($this->dataPoints)) {
+            return $graph;
+        }
+
+        $d = $this->number_of_days -1;
+        /*while (0 <= $d) {
+            $dateString = $this->results[$d]['date'];
+            $xValue = $this->end_of_graph_x - ($d * $this->pixels_per_unit_x);
+            if (array_key_exists($dateString, $this->dataPoints)) {
+                $yValue = $this->end_of_graph_y - (((float) $this->dataPoints[$dateString] - $this->start_axis) * $this->pixels_per_unit_y);
+                $graph .= "<circle cx=\"$xValue\" cy=\"$yValue\" r=\"3\"/>";
+            }
+            $d--;
+        }*/
+        while (0 <= $d) {
+            $dateString = $this->results[$d]['date'];
+            $xValue = $this->end_of_graph_x - ($d * $this->pixels_per_unit_x);
+            foreach ($this->dataPoints as $transaction) {
+                if ($transaction['date'] === $dateString) {
+                    $point_color = 'black';
+                    if ($transaction['volume'] < 0) {
+                        $point_color = 'red';
+                    }
+                    $yValue = $this->end_of_graph_y - (((float) $transaction['value'] - $this->start_axis) * $this->pixels_per_unit_y);
+                    $graph .= "<circle cx=\"$xValue\" cy=\"$yValue\" r=\"3\" fill='$point_color'/>";
+                }
+            }
+            $d--;
+        }
+        return $graph;
+    }
+
+
     private function add_weeks_months_years(): string
     {
-        $d = $this->data_points -1;
+        $d = $this->number_of_days -1;
         $graph = '';
         $currentMonth = 0;
         $currentYear = 0;
@@ -330,7 +376,8 @@ class Socket {
             }
             while (0 <= $d) {
                 $dateString = $this->results[$d]['date'];
-                $xValue = $this->end_of_graph_x - ($d * $this->separator);
+                $xValue = $this->end_of_graph_x - ($d * $this->pixels_per_unit_x);
+
                 if (0 <= $xValue) {
                     $year = (int) substr($dateString, 0, 4);
                     $month = (int) substr($dateString, 5, 2);
@@ -368,7 +415,7 @@ class Socket {
     {
         $output = '';
         $monthWords = date("M", mktime(0, 0, 0, $month, $day, $year));
-        if ($d !== $this->data_points - 1) {
+        if ($d !== $this->number_of_days - 1) {
             $output .= "<path stroke=\"black\" stroke-width=\"0.4\" d=\"M$xValue 10 v $this->height_of_graph\"/>";
         }
         $monthLegendY = $this->height_of_graph + 20;

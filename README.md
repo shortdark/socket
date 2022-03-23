@@ -31,7 +31,12 @@ $dataArray = [
     ['date'=>'2021-02-26', 'col1'=>111, 'col2'=> 151, 'col3'=>89]
 ];
 
-echo $socket->draw_svg($dataArray);
+$dataPointsArray = [
+    ['date' => '2021-03-05', 'value' => 156, 'volume' => 1],
+    ['date' => '2021-03-01', 'value' => 152, 'volume' => 2],
+]; 
+
+echo $socket->draw_svg($dataArray, $dataPointsArray);
 ```
 
 ### Data Array
@@ -46,6 +51,12 @@ echo $socket->draw_svg($dataArray);
 * The array should start with the newest date and work backwards. 
 * It's assumed that the data will be continuous (mon-fri) without gaps in the data. Data can be 7 days a week, however, the week lines are currently on Friday.
 * Public holidays should also be included in the array with either the same value from the previous day, or with the value as null.
+
+### Data Points Array
+
+* Optional.
+* If the date of a data point is outside the date range of the graph it will be ignored.
+* Volume can be positive or negative, positive points are represented by a black circle, negative points are a red circle.
 
 ### Optional Cutomization
 
