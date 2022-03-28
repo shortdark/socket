@@ -52,13 +52,23 @@ echo $socket->draw_svg($dataArray, $dataPointsArray);
 * It's assumed that the data will be continuous (mon-fri) without gaps in the data. Data can be 7 days a week, however, the week lines are currently on Friday.
 * Public holidays should also be included in the array with either the same value from the previous day, or with the value as null.
 
+### Representing A Range Of Values 
+
+If you have two lines that are the min and max values, and you want to represent them as a range on the graph, i.e. between the two lines is filled with color, you can make the ```filled_lines``` variable true.
+
+* Currently, it is either lines or ranges, not both.
+* Same naming convention as normal graph lines but the space between ```col1``` and ```col2``` would be filled, then the space between ```col3``` and ```col4``` would be filled, etc.
+* It expects an even number of lines with each pair getting filled. If ```col3``` exists but ```col4``` does not exist the line will not be shown.
+* The filled lines are semi-opaque so any ranges underneath are also visible.
+* The color used for each range is the color of the second line, i.e. ```col2```, ```col4```, ```col6```, etc.
+
 ### Data Points Array
 
 * Optional.
 * If the date of a data point is outside the date range of the graph it will be ignored.
 * Volume can be positive or negative, positive points are represented by a black circle, negative points are a red circle.
 
-### Optional Cutomization
+### Optional Customization
 
 Defaults are shown, below. Each of these variables can be altered, if desired.
 
@@ -78,6 +88,8 @@ Defaults are shown, below. Each of these variables can be altered, if desired.
 * **branding_text** STRING (default: '')
 * **brand_x_from_right** INT (default: 120)
 * **brand_y_from_bottom** INT (default: 15)
+* **filled_lines** BOOL (default: false)
+* **nearest_value** BOOL (default: false)
 
 You can modify any/all the above like so...
 

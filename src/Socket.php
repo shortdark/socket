@@ -1,9 +1,9 @@
 <?php
 
 /**
- * Socket - takes data as an array and plots it as a SVG graph.
+ * Socket - takes data arrays and plots them as an SVG line or range graph with optional data points represented as dots.
  * PHP Version >= 7.0
- * Version 0.3.01
+ * Version 0.3.02
  * @package Socket
  * @link https://github.com/shortdark/socket/
  * @author Neil Ludlow (shortdark) <neil@shortdark.net>
@@ -77,6 +77,10 @@ class Socket {
     public $brand_x_from_right = 120;
     public $brand_y_from_bottom = 15;
 
+    public $filled_lines = false;
+
+    public $nearest_value = false;
+
     /**
      * ################
      * ##
@@ -85,7 +89,9 @@ class Socket {
      * ################
      */
 
-    private $results = [];
+    private $lines = [];
+
+    private $points = [];
 
     private $end_of_graph_x;
 
@@ -107,7 +113,9 @@ class Socket {
 
     private $number_of_days;
 
-    private $dataPoints;
+    private $number_of_points;
+
+
 
 
 
@@ -119,12 +127,16 @@ class Socket {
      * ################
      */
 
-    public function draw_svg(array $dataArray, array $dataPointsArray=[]): string
+    public function draw_svg (array $lineArray, array $pointArray=[]): string
     {
+        // Ideally there would be 3 arrays: lines, points and ranges and all of them could be displayed at the same time
+        // Or, the naming convention of $lineArray uses line1, line2 for lines, and range1, range2 for a range.
+        // In that scenario, you might also get bar1, bar2 or different variations.
+
         $this->assign_dimensions_from_config();
 
-        $this->results = $dataArray;
-        $this->dataPoints = $dataPointsArray;
+        $this->lines = $lineArray;
+        $this->points = $pointArray;
 
         $this->get_data_limits();
 
@@ -146,7 +158,11 @@ class Socket {
         $graph = $this->set_up_svg_graph();
         $graph .= $this->set_up_svg_axis();
 
-        $graph .= $this->draw_all_graph_lines();
+        if ($this->filled_lines !== true) {
+            $graph .= $this->draw_all_graph_lines();
+        } else {
+            $graph .= $this->draw_filled_graph_lines();
+        }
 
         $graph .= $this->add_data_points();
 
@@ -159,8 +175,10 @@ class Socket {
 
     private function get_data_limits()
     {
-        $this->graph_lines_count = count($this->results[0]) -1;
-        $this->number_of_days = count($this->results);
+        $this->graph_lines_count = count($this->lines[0]) -1;
+        $this->number_of_days = count($this->lines);
+
+        $this->number_of_points = count($this->points);
 
         $this->modify_separator_to_make_graph_fit_on_screen();
 
@@ -205,33 +223,63 @@ class Socket {
     private function draw_all_graph_lines(): string
     {
         $n = 1;
-        $columnName = 'col' . $n;
         $output = '';
         while ($n <= $this->graph_lines_count) {
+            $columnName = 'col' . $n;
             $output .= $this->draw_graph_line($columnName);
             $n++;
-            $columnName = 'col' . $n;
         }
+        return $output;
+    }
+
+    private function draw_filled_graph_lines(): string
+    {
+        $n = 1;
+        $output = '';
+        while ($n <= $this->graph_lines_count) {
+            if ($n % 2 !== 0 && isset($this->lines[0]['col'.($n+1)])) {
+                $output .= '<polygon points="';
+            }
+            $output .= $this->draw_filled_graph_line($n);
+            if ($n % 2 === 0) {
+                $color = $this->colors['col'.$n];
+                $output .= "\" fill=\"$color\" stroke=\"$color\" opacity=\"0.5\" />";
+            }
+            $n++;
+        }
+
+
         return $output;
     }
 
     private function getHighest (): int
     {
-        $i=0;
-        $max = $this->results[$i]['col1'];
+        // TODO: Refactor
+        $i=$j=0;
+        $max = $this->lines[$i]['col1'];
+        // lines
         while ($i <= $this->number_of_days) {
             for ($j=1; $j <= $this->graph_lines_count; $j++) {
                 $colName = 'col' . $j;
-                if (isset($this->results[$i][$colName]) && $this->results[$i][$colName] > $max) {
-                    $max = $this->results[$i][$colName];
+                if (isset($this->lines[$i][$colName]) && $this->lines[$i][$colName] > $max) {
+                    $max = $this->lines[$i][$colName];
                 }
             }
             $i++;
         }
+        // points
+        while ($j <= $this->number_of_points) {
+            if (isset($this->points[$j]['value']) && $this->points[$j]['value'] > $max) {
+                $max = $this->points[$j]['value'];
+            }
+            $j++;
+        }
         $max = (int) ceil($max);
-        if (8 < $max) {
-            while ( $max % 10 !== 0 ) {
-                $max++;
+        if ($this->nearest_value === false) {
+            if (8 < $max) {
+                while ( $max % 10 !== 0 ) {
+                    $max++;
+                }
             }
         }
         return $max;
@@ -239,21 +287,32 @@ class Socket {
 
     private function getLowest (): int
     {
-        $i=0;
-        $min = $this->results[$i]['col1'];
+        // TODO: Refactor
+        $i=$j=0;
+        $min = $this->lines[$i]['col1'];
+        // lines
         while ($i <= $this->number_of_days) {
             for ($j=1; $j <= $this->graph_lines_count; $j++) {
                 $colName = 'col' . $j;
-                if ( isset($this->results[$i][$colName]) && $this->results[$i][$colName] < $min) {
-                    $min = $this->results[$i][$colName];
+                if ( isset($this->lines[$i][$colName]) && $this->lines[$i][$colName] < $min) {
+                    $min = $this->lines[$i][$colName];
                 }
             }
             $i++;
         }
+        // points
+        while ($j <= $this->number_of_points) {
+            if (isset($this->points[$j]['value']) && $this->points[$j]['value'] < $min) {
+                $min = $this->points[$j]['value'];
+            }
+            $j++;
+        }
         $min = (int) floor($min);
-        if (10 < $min || 10 < $this->end_axis) {
-            while ( $min % 10 !== 0 ) {
-                $min--;
+        if ($this->nearest_value === false) {
+            if (10 < $min || 10 < $this->end_axis) {
+                while ( $min % 10 !== 0 ) {
+                    $min--;
+                }
             }
         }
         return $min;
@@ -292,7 +351,7 @@ class Socket {
         return $graph;
     }
 
-    private function draw_graph_line($columnName): string
+    private function draw_graph_line ($columnName): string
     {
         $g = 0;
         $closed = true;
@@ -300,9 +359,9 @@ class Socket {
         $line='';
 
         while ($g <= $this->number_of_days) {
-            if (isset($this->results[$g][$columnName]) && null !== $this->results[$g][$columnName]) {
+            if (isset($this->lines[$g][$columnName]) && null !== $this->lines[$g][$columnName]) {
                 $xValue = $this->end_of_graph_x - ($g * $this->pixels_per_unit_x);
-                $graphVal = (float)$this->results[$g][$columnName];
+                $graphVal = (float)$this->lines[$g][$columnName];
                 $yValue = $this->end_of_graph_y - (($graphVal - $this->start_axis) * $this->pixels_per_unit_y);
 
                 if (0 === $g || $closed === true) {
@@ -322,38 +381,57 @@ class Socket {
         if (true !== $closed) {
             $line .= "\" stroke-linejoin=\"round\" stroke=\"$color\" fill=\"none\"/>";
         }
+        return $line;
+    }
 
-
+    private function draw_filled_graph_line ($n): string
+    {
+        $line='';
+        $columnName = 'col' . $n;
+        if ($n % 2 !== 0) {
+            $g = 0;
+            while ($g <= $this->number_of_days) {
+                if (isset($this->lines[$g][$columnName]) && null !== $this->lines[$g][$columnName]) {
+                    $xValue = $this->end_of_graph_x - ($g * $this->pixels_per_unit_x);
+                    $graphVal = (float)$this->lines[$g][$columnName];
+                    $yValue = $this->end_of_graph_y - (($graphVal - $this->start_axis) * $this->pixels_per_unit_y);
+                    $line .= " $xValue,$yValue";
+                }
+                $g++;
+            }
+        } elseif ($n % 2 === 0) {
+            $g = $this->number_of_days;
+            while ($g >= 0) {
+                if (isset($this->lines[$g][$columnName]) && null !== $this->lines[$g][$columnName]) {
+                    $xValue = $this->end_of_graph_x - ($g * $this->pixels_per_unit_x);
+                    $graphVal = (float)$this->lines[$g][$columnName];
+                    $yValue = $this->end_of_graph_y - (($graphVal - $this->start_axis) * $this->pixels_per_unit_y);
+                    $line .= " $xValue,$yValue";
+                }
+                $g--;
+            }
+        }
         return $line;
     }
 
     private function add_data_points (): string
     {
         $graph = '';
-        if (empty($this->dataPoints)) {
+        if (empty($this->points)) {
             return $graph;
         }
 
         $d = $this->number_of_days -1;
-        /*while (0 <= $d) {
-            $dateString = $this->results[$d]['date'];
-            $xValue = $this->end_of_graph_x - ($d * $this->pixels_per_unit_x);
-            if (array_key_exists($dateString, $this->dataPoints)) {
-                $yValue = $this->end_of_graph_y - (((float) $this->dataPoints[$dateString] - $this->start_axis) * $this->pixels_per_unit_y);
-                $graph .= "<circle cx=\"$xValue\" cy=\"$yValue\" r=\"3\"/>";
-            }
-            $d--;
-        }*/
         while (0 <= $d) {
-            $dateString = $this->results[$d]['date'];
+            $dateString = $this->lines[$d]['date'];
             $xValue = $this->end_of_graph_x - ($d * $this->pixels_per_unit_x);
-            foreach ($this->dataPoints as $transaction) {
-                if ($transaction['date'] === $dateString) {
+            for ($i=0; $i < $this->number_of_points; $i++) {
+                if ($this->points[$i]['date'] === $dateString) {
                     $point_color = 'black';
-                    if ($transaction['volume'] < 0) {
+                    if ($this->points[$i]['volume'] < 0) {
                         $point_color = 'red';
                     }
-                    $yValue = $this->end_of_graph_y - (((float) $transaction['value'] - $this->start_axis) * $this->pixels_per_unit_y);
+                    $yValue = $this->end_of_graph_y - (((float) $this->points[$i]['value'] - $this->start_axis) * $this->pixels_per_unit_y);
                     $graph .= "<circle cx=\"$xValue\" cy=\"$yValue\" r=\"3\" fill='$point_color'/>";
                 }
             }
@@ -369,13 +447,13 @@ class Socket {
         $graph = '';
         $currentMonth = 0;
         $currentYear = 0;
-        if ($this->results[$d]['date']) {
+        if ($this->lines[$d]['date']) {
             if (true === $this->show_week_numbers) {
                 $weekLegendX = ($this->width_of_graph / 2) - 20;
                 $graph .= "<text x=\"$weekLegendX\" y=\"30\" font-family=\"sans-serif\" font-size=\"12px\" fill=\"black\">Week Numbers</text>";
             }
             while (0 <= $d) {
-                $dateString = $this->results[$d]['date'];
+                $dateString = $this->lines[$d]['date'];
                 $xValue = $this->end_of_graph_x - ($d * $this->pixels_per_unit_x);
 
                 if (0 <= $xValue) {
@@ -437,23 +515,38 @@ class Socket {
             return '';
         }
 
-        $vertical = 45 + (30 * ($this->graph_lines_count));
+        if ($this->filled_lines !== true) {
+            $vertical = 45 + (30 * ($this->graph_lines_count));
+        } else {
+            $vertical = 45 + (30 * ($this->graph_lines_count/2));
+        }
+
         $upperName = strtoupper($this->graph_name);
         $graph = "<path fill-opacity=\"0.9\" d=\"M20 12 v{$vertical} h{$this->legend_box_width} v-{$vertical} h-{$this->legend_box_width}\" fill=\"white\"></path>";
         $graph .= "<text x=\"50\" y=\"40\" font-family=\"sans-serif\" font-size=\"16px\" fill=\"black\" text-decoration=\"underline\">{$upperName}</text>";
 
         for ($i=1; $i<=$this->graph_lines_count; $i++) {
-            $column = 'col' . $i;
-            $lastValue = '';
-            $lineYstart = 25 + (30* $i);
-            $lineYend = 45 + (30* $i);
-            $textY = 40 + (30* $i);
-            if (false !== $this->show_last_value_in_legend && !empty($this->results[0][$column])) {
-                $lastValue = "{$this->legend_pre_value}{$this->results[0][$column]}{$this->legend_post_value}";
+            if ($this->filled_lines !== true) {
+                $graph .= $this->draw_keys($i, $i, $graph);
+            } elseif ($i % 2 === 0) {
+                $graph .= $this->draw_keys($i, $i/2, $graph);
             }
-            $graph .= "<path d=\"M30 {$lineYstart} L40 {$lineYend}\" stroke-linejoin=\"round\" stroke=\"{$this->colors[$column]}\" fill=\"none\"/>";
-            $graph .= "<text x=\"50\" y=\"{$textY}\" font-family=\"sans-serif\" font-size=\"16px\" fill=\"black\">{$this->legends[$column]} {$lastValue}</text>";
         }
+        return $graph;
+    }
+
+    private function draw_keys (int $i, int $positioning_i, string $graph): string
+    {
+        $column = 'col' . $i;
+        $lastValue = '';
+        $lineYstart = 25 + (30 * $positioning_i);
+        $lineYend = 45 + (30 * $positioning_i);
+        $textY = 40 + (30 * $positioning_i);
+        if (false !== $this->show_last_value_in_legend && !empty($this->lines[0][$column])) {
+            $lastValue = "{$this->legend_pre_value}{$this->lines[0][$column]}{$this->legend_post_value}";
+        }
+        $graph .= "<path d=\"M30 {$lineYstart} L40 {$lineYend}\" stroke-linejoin=\"round\" stroke=\"{$this->colors[$column]}\" fill=\"none\"/>";
+        $graph .= "<text x=\"50\" y=\"{$textY}\" font-family=\"sans-serif\" font-size=\"16px\" fill=\"black\">{$this->legends[$column]} {$lastValue}</text>";
         return $graph;
     }
 
