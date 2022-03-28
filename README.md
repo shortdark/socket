@@ -139,6 +139,12 @@ You can modify any/all the above like so...
     $socket->brand_x_from_right = 0;
     $socket->brand_y_from_bottom = 0;
     
+    // Representing two lines as a range, i.e. the space between the two lines is filled
+    $socket->filled_lines = false;
+
+    // Generally the graph starts/ends at a multiple of 10, the nearest value would be the nearest number above or below the max/min value.
+    $socket->nearest_value = false;
+    
     echo $socket->draw_svg($dataArray);
 
 

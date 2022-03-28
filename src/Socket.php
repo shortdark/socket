@@ -3,7 +3,7 @@
 /**
  * Socket - takes data arrays and plots them as an SVG line or range graph with optional data points represented as dots.
  * PHP Version >= 7.0
- * Version 0.3.02
+ * Version 0.3.03
  * @package Socket
  * @link https://github.com/shortdark/socket/
  * @author Neil Ludlow (shortdark) <neil@shortdark.net>
@@ -77,8 +77,10 @@ class Socket {
     public $brand_x_from_right = 120;
     public $brand_y_from_bottom = 15;
 
+    // Representing two lines as a range, i.e. the space between the two lines is filled
     public $filled_lines = false;
 
+    // Generally the graph starts/ends at a multiple of 10, the nearest value would be the nearest number above or below the max/min value.
     public $nearest_value = false;
 
     /**
