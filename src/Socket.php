@@ -3,7 +3,7 @@
 /**
  * Socket - takes data arrays and plots them as an SVG line or range graph with optional data points represented as dots.
  * PHP Version >= 8.0
- * Version 0.3.05
+ * Version 0.3.06
  * @package Socket
  * @link https://github.com/shortdark/socket/
  * @author Neil Ludlow (shortdark) <neil@shortdark.net>

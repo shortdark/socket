@@ -153,14 +153,27 @@ class DataManipulation
         $this->getMinMaxFromPoints();
 
         if ($this->max < 3 && $this->min > 0) {
-            $this->max = (float) sprintf('%.1f', $this->max);
-            $this->min = (float) sprintf('%.1f', $this->min);
-            if (($this->max * 10) % 2 !== 0) {
-                $this->max += 0.1;
+            $temp_max = (float) sprintf('%.1f', $this->max);
+            $temp_min = (float) sprintf('%.1f', $this->min);
+
+            // Make sure max isn't rounded down
+            if ($this->max > $temp_max) {
+                $temp_max += 0.1;
             }
-            if (($this->min * 10) % 2 !== 0) {
-                $this->min -= 0.1;
+            // Make sure min isn't rounded up
+            if ($this->min < $temp_min) {
+                $temp_min -= 0.1;
             }
+
+            // Make min and max a multiple of 0.2, i.e. if not modulus of 0.2 add/subtract 0.1
+            if (($temp_max * 10) % 2 !== 0) {
+                $temp_max += 0.1;
+            }
+            if (($temp_min * 10) % 2 !== 0) {
+                $temp_min -= 0.1;
+            }
+            $this->max = $temp_max;
+            $this->min = $temp_min;
         } else {
             $this->roundMax();
             $this->roundMin();
