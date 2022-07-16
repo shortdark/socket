@@ -34,6 +34,8 @@ class DataManipulation
 
     public bool $show_week_numbers = false;
 
+    public string $month_format = 'short'; // none, letter, short, long
+
     // Optional, show a legends box to describe each graph line
     public bool $show_legend_box = true;
 
@@ -150,9 +152,21 @@ class DataManipulation
 
         $this->getMinMaxFromPoints();
 
-        $this->roundMax();
+        if ($this->max < 3 && $this->min > 0) {
+            $this->max = (float) sprintf('%.1f', $this->max);
+            $this->min = (float) sprintf('%.1f', $this->min);
+            if (($this->max * 10) % 2 !== 0) {
+                $this->max += 0.1;
+            }
+            if (($this->min * 10) % 2 !== 0) {
+                $this->min -= 0.1;
+            }
+        } else {
+            $this->roundMax();
+            $this->roundMin();
+        }
 
-        $this->roundMin();
+
     }
 
     private function getMinMaxFromLines()

@@ -3,11 +3,11 @@
 /**
  * Socket - takes data arrays and plots them as an SVG line or range graph with optional data points represented as dots.
  * PHP Version >= 8.0
- * Version 0.3.04
+ * Version 0.3.05
  * @package Socket
  * @link https://github.com/shortdark/socket/
  * @author Neil Ludlow (shortdark) <neil@shortdark.net>
- * @copyright 2021 Neil Ludlow
+ * @copyright 2022 Neil Ludlow
  * @license http://www.gnu.org/copyleft/lesser.html GNU Lesser General Public License
  * @note This program is distributed in the hope that it will be useful - WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -257,7 +257,17 @@ class Socket extends DataManipulation
     private function drawMonthLine(int $month, int $day, int $year, float $xValue, $d): string
     {
         $output = '';
-        $monthWords = date("M", mktime(0, 0, 0, $month, $day, $year));
+        $monthWords = '';
+
+        if ('none' !== strtolower($this->month_format)) {
+            $monthWords = date("F", mktime(0, 0, 0, $month, $day, $year));
+            if ('letter' === strtolower($this->month_format)) {
+                $monthWords = $monthWords[0];
+            } elseif ('short' === strtolower($this->month_format)) {
+                $monthWords = substr($monthWords, 0, 3);
+            }
+        }
+
         if ($d !== $this->number_of_days - 1) {
             $output .= "<path stroke=\"black\" stroke-width=\"0.4\" d=\"M$xValue 10 v $this->height_of_graph\"/>";
         }
