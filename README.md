@@ -77,6 +77,7 @@ Defaults are shown, below. Each of these variables can be altered, if desired.
 * **iterations** INT (default: 10)
 * **colors** ARRAY (default ['col1' => 'dark green', 'col2' => 'medium blue', 'col3' => 'orange red', 'col4' => 'orange', ...])
 * **show_week_numbers** (default: false)
+* **show_year_xaxis** (default: true)
 * **month_format** (default: 'short') Can be 'none', 'letter', 'short' or 'long' 
 * **show_legend_box** BOOL (default: true)
 * **legend_box_width** INT (default: 200)
@@ -115,6 +116,9 @@ You can modify any/all the above like so...
 
     // Whether to show the week number from the start of the year (every fifth week: 5, 10...)
     $socket->show_week_numbers = true;
+
+    // The dates for the x-axis must be in the format YYY-mm-dd, but do we want to display the year?
+    $socket->show_year_xaxis = false;
 
     // Which month format to display on the x-axis
     $socket->month_format = 'letter'; // 'none', 'letter', 'short', or 'long'

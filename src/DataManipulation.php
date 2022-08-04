@@ -32,7 +32,11 @@ class DataManipulation
         'col10' => '#6A5ACD', // slate blue
     ];
 
+    // Show week numbers across the top of the graph (multiples of 5)
     public bool $show_week_numbers = false;
+
+    // Show the year below the months on the x-axis
+    public bool $show_year_xaxis = true;
 
     public string $month_format = 'short'; // none, letter, short, long
 
