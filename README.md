@@ -76,6 +76,7 @@ Defaults are shown, below. Each of these variables can be altered, if desired.
 * **height_of_svg** INT (default: 540)
 * **iterations** INT (default: 10)
 * **colors** ARRAY (default ['col1' => 'dark green', 'col2' => 'medium blue', 'col3' => 'orange red', 'col4' => 'orange', ...])
+* **fill_opacity** FLOAT (default: 0.5)
 * **show_week_numbers** (default: false)
 * **show_year_xaxis** (default: true)
 * **month_format** (default: 'short') Can be 'none', 'letter', 'short' or 'long' 

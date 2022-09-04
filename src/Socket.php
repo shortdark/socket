@@ -3,7 +3,7 @@
 /**
  * Socket - takes data arrays and plots them as an SVG line or range graph with optional data points represented as dots.
  * PHP Version >= 8.0
- * Version 0.3.07
+ * Version 0.3.08
  * @package Socket
  * @link https://github.com/shortdark/socket/
  * @author Neil Ludlow (shortdark) <neil@shortdark.net>
@@ -98,7 +98,7 @@ class Socket extends DataManipulation
             $output .= $this->draw_polygon_points($n);
             if ($n % 2 === 0) {
                 $color = $this->colors['col' . $n];
-                $output .= "\" fill=\"$color\" stroke=\"$color\" opacity=\"0.5\" />";
+                $output .= "\" fill=\"$color\" stroke=\"$color\" opacity=\"{$this->fill_opacity}\" />";
             }
             $n++;
         }

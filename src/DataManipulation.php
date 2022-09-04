@@ -32,6 +32,8 @@ class DataManipulation
         'col10' => '#6A5ACD', // slate blue
     ];
 
+    public float $fill_opacity = 0.9;
+
     // Show week numbers across the top of the graph (multiples of 5)
     public bool $show_week_numbers = false;
 
