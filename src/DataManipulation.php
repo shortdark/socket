@@ -37,6 +37,9 @@ class DataManipulation
     // Show week numbers across the top of the graph (multiples of 5)
     public bool $show_week_numbers = false;
 
+    // Show week lines, if false week numbers will not be shown either
+    public bool $show_week_lines = true;
+
     // Show the year below the months on the x-axis
     public bool $show_year_xaxis = true;
 

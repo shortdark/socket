@@ -78,6 +78,7 @@ Defaults are shown, below. Each of these variables can be altered, if desired.
 * **colors** ARRAY (default ['col1' => 'dark green', 'col2' => 'medium blue', 'col3' => 'orange red', 'col4' => 'orange', ...])
 * **fill_opacity** FLOAT (default: 0.5)
 * **show_week_numbers** (default: false)
+* **show_week_lines** (default: true)
 * **show_year_xaxis** (default: true)
 * **month_format** (default: 'short') Can be 'none', 'letter', 'short' or 'long' 
 * **show_legend_box** BOOL (default: true)

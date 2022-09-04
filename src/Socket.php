@@ -3,7 +3,7 @@
 /**
  * Socket - takes data arrays and plots them as an SVG line or range graph with optional data points represented as dots.
  * PHP Version >= 8.0
- * Version 0.3.09
+ * Version 0.3.10
  * @package Socket
  * @link https://github.com/shortdark/socket/
  * @author Neil Ludlow (shortdark) <neil@shortdark.net>
@@ -230,7 +230,7 @@ class Socket extends DataManipulation
         $currentMonth = 0;
         $currentYear = 0;
         if ($this->lines[$d]['date']) {
-            if (true === $this->show_week_numbers) {
+            if (true === $this->show_week_numbers && true === $this->show_week_lines) {
                 $weekLegendX = ($this->width_of_graph / 2) - 20;
                 $graph .= "<text x=\"$weekLegendX\" y=\"30\" font-family=\"sans-serif\" font-size=\"12px\" fill=\"black\">Week Numbers</text>";
             }
@@ -351,7 +351,7 @@ class Socket extends DataManipulation
             $month = (int)substr($dateString, 5, 2);
             $day = (int)substr($dateString, 8, 2);
             $dayOfWeek = (int)date("w", mktime(0, 0, 0, $month, $day, $year));
-            if (5 === $dayOfWeek) {
+            if (true === $this->show_week_lines && 5 === $dayOfWeek) {
                 $graph .= $this->drawWeekLine($month, $day, $year, $xValue);
             }
             if ($currentMonth !== $month) {
