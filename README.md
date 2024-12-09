@@ -101,6 +101,8 @@ Defaults are shown, below. Each of these variables can be altered, if desired.
 
 You can modify any/all the above like so...
 
+    <?php
+    
     $socket = new Shortdark\Socket;
     
     // Change the width of the SVG
