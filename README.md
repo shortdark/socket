@@ -39,6 +39,8 @@ $dataPointsArray = [
 echo $socket->draw_svg($dataArray, $dataPointsArray);
 ```
 
+## Options
+
 ### Data Array
 
 * The graph can be empty (0 lines) or have up to 10 graph lines. 
@@ -94,6 +96,8 @@ Defaults are shown, below. Each of these variables can be altered, if desired.
 * **brand_y_from_bottom** INT (default: 15)
 * **filled_lines** BOOL (default: false)
 * **nearest_value** BOOL (default: false)
+
+## Advanced Usage
 
 You can modify any/all the above like so...
 
